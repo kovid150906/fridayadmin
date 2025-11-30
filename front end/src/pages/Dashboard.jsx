@@ -254,7 +254,8 @@ const Dashboard = () => {
                 <p>Required columns:<br/>
                   • Hostel Name<br/>
                   • Available Room No.<br/>
-                  • Room Capacity
+                  • Room Capacity<br/>
+                  • Room Password (required)
                 </p>
                 
                 <input
@@ -331,6 +332,7 @@ const Dashboard = () => {
                           <th>Hostel Name</th>
                           <th>Available Room No.</th>
                           <th>Room Capacity</th>
+                          <th>Room Password</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -339,6 +341,7 @@ const Dashboard = () => {
                             <td>{row['hostel name']}</td>
                             <td>{row['available room no.']}</td>
                             <td>{row['room capacity']}</td>
+                            <td>{row['room password']}</td>
                           </tr>
                         ))}
                       </tbody>

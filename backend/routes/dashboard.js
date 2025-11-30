@@ -10,7 +10,8 @@ const router = express.Router();
 let hostelData = [];
 
 // Required columns for CSV validation
-const REQUIRED_COLUMNS = ['hostel name', 'available room no.', 'room capacity'];
+// 'room password' is now required (password may be same across rows, uniqueness is by hostel+room)
+const REQUIRED_COLUMNS = ['hostel name', 'available room no.', 'room capacity', 'room password'];
 
 /**
  * Validate CSV columns
@@ -61,11 +62,12 @@ router.post('/upload', (req, res) => {
       });
     }
 
-      // Prepare new records (normalize keys)
+      // Prepare new records (normalize keys). 'room password' is optional — preserved if present.
       const newRecords = csvData.map((row) => ({
         'hostel name': row['hostel name'] || row['Hostel Name'] || '',
         'available room no.': row['available room no.'] || row['Available Room No.'] || '',
-        'room capacity': row['room capacity'] || row['Room Capacity'] || ''
+        'room capacity': row['room capacity'] || row['Room Capacity'] || '',
+        'room password': row['room password'] || row['Room Password'] || ''
       }));
 
       // Combine and deduplicate: keep one entry per (hostel name + available room no.)
@@ -80,7 +82,8 @@ router.post('/upload', (req, res) => {
         combinedMap[key] = {
           'hostel name': r['hostel name'],
           'available room no.': r['available room no.'],
-          'room capacity': r['room capacity']
+          'room capacity': r['room capacity'],
+          'room password': r['room password'] || ''
         };
       });
 
@@ -90,7 +93,8 @@ router.post('/upload', (req, res) => {
         combinedMap[key] = {
           'hostel name': r['hostel name'],
           'available room no.': r['available room no.'],
-          'room capacity': r['room capacity']
+          'room capacity': r['room capacity'],
+          'room password': r['room password'] || ''
         };
       });
 
@@ -99,7 +103,8 @@ router.post('/upload', (req, res) => {
         id: idx + 1,
         'hostel name': r['hostel name'],
         'available room no.': r['available room no.'],
-        'room capacity': r['room capacity']
+        'room capacity': r['room capacity'],
+        'room password': r['room password'] || ''
       }));
 
       hostelData = finalRecords;
