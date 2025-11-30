@@ -1,0 +1,40 @@
+/* ==================================================
+   Friday Portal - Global Styles
+   Base styles and CSS custom properties
+   ================================================== */
+
+:root {
+  /* Typography */
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+  
+  /* Font rendering optimizations */
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Universal box-sizing reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Body styling with gradient background */
+body {
+  margin: 0;
+  min-height: 100vh;
+  
+  /* Multi-layer gradient background for depth */
+  background: 
+    radial-gradient(circle at top, rgba(56, 189, 248, 0.3), transparent 45%),
+    linear-gradient(135deg, #050816 0%, #0b1f3a 55%, #0f344f 100%);
+  
+  color: #e2e8f0;
+}
+
+/* Root container */
+#root {
+  min-height: 100vh;
+}
