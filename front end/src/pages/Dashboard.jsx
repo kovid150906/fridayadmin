@@ -205,30 +205,7 @@ const Dashboard = () => {
     window.location.reload();
   };
 
-  /**
-   * Clear uploaded data
-   */
-  const handleClearData = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/dashboard/data`, {
-        method: 'DELETE'
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        setCsvData([]);
-        setHostelList([]);
-        setSelectedHostel('all');
-        setUploadStatus('');
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
-      }
-    } catch (error) {
-      console.error('Error clearing data:', error);
-    }
-  };
+  // Clear functionality removed — data is managed via uploads and deduplication on the backend
 
   return (
     <div className="dashboard-container">
@@ -301,11 +278,7 @@ const Dashboard = () => {
                   </div>
                 )}
                 
-                {csvData.length > 0 && (
-                  <button className="clear-btn" onClick={handleClearData}>
-                    Clear All Data
-                  </button>
-                )}
+                {/* Clear button removed — backend handles deduplication and data is persistent in-memory */}
               </div>
             </div>
           </section>

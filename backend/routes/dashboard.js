@@ -68,19 +68,47 @@ router.post('/upload', (req, res) => {
         'room capacity': row['room capacity'] || row['Room Capacity'] || ''
       }));
 
-      // Assign unique IDs to new records, continuing from existing max id
-      const existingMaxId = hostelData.length > 0 ? Math.max(...hostelData.map(r => r.id || 0)) : 0;
-      let nextId = existingMaxId + 1;
-      newRecords.forEach(r => { r.id = nextId++; });
+      // Combine and deduplicate: keep one entry per (hostel name + available room no.)
+      // Build a map keyed by normalized hostel + room to ensure uniqueness
+      const normalize = (s) => (s || '').toString().trim().toLowerCase();
 
-      // Combine data (append new uploads)
-      hostelData = hostelData.concat(newRecords);
+      const combinedMap = {};
 
-      console.log(`✅ Uploaded ${newRecords.length} new hostel records, total: ${hostelData.length}`);
+      // Start with existing data (older records)
+      hostelData.forEach(r => {
+        const key = `${normalize(r['hostel name'])}||${normalize(r['available room no.'])}`;
+        combinedMap[key] = {
+          'hostel name': r['hostel name'],
+          'available room no.': r['available room no.'],
+          'room capacity': r['room capacity']
+        };
+      });
+
+      // New records override existing entries with the same hostel+room
+      newRecords.forEach(r => {
+        const key = `${normalize(r['hostel name'])}||${normalize(r['available room no.'])}`;
+        combinedMap[key] = {
+          'hostel name': r['hostel name'],
+          'available room no.': r['available room no.'],
+          'room capacity': r['room capacity']
+        };
+      });
+
+      // Rebuild hostelData from map and assign sequential ids
+      const finalRecords = Object.values(combinedMap).map((r, idx) => ({
+        id: idx + 1,
+        'hostel name': r['hostel name'],
+        'available room no.': r['available room no.'],
+        'room capacity': r['room capacity']
+      }));
+
+      hostelData = finalRecords;
+
+      console.log(`✅ Uploaded ${newRecords.length} new hostel records, total unique: ${hostelData.length}`);
 
       res.json({
         success: true,
-        message: `Successfully uploaded ${newRecords.length} records, total: ${hostelData.length}`,
+        message: `Successfully uploaded ${newRecords.length} records, total unique: ${hostelData.length}`,
         data: {
           recordCount: hostelData.length,
           records: hostelData
@@ -169,55 +197,12 @@ router.get('/hostels', (req, res) => {
  * DELETE /api/dashboard/data/:id
  * Delete a specific record
  */
-router.delete('/data/:id', (req, res) => {
-  try {
-    const { id } = req.params;
-    const recordId = parseInt(id);
-
-    const initialLength = hostelData.length;
-    hostelData = hostelData.filter(record => record.id !== recordId);
-
-    if (hostelData.length < initialLength) {
-      console.log(`🗑️ Deleted record with id: ${id}`);
-      res.json({
-        success: true,
-        message: 'Record deleted successfully'
-      });
-    } else {
-      res.status(404).json({
-        success: false,
-        error: 'Record not found'
-      });
-    }
-  } catch (error) {
-    console.error('Error deleting record:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to delete record'
-    });
-  }
-});
+// DELETE endpoints removed: clearing/deleting records is disabled. Data is managed via uploads.
 
 /**
  * DELETE /api/dashboard/data
  * Clear all data
  */
-router.delete('/data', (req, res) => {
-  try {
-    hostelData = [];
-    console.log('🗑️ Cleared all hostel data');
-    
-    res.json({
-      success: true,
-      message: 'All data cleared successfully'
-    });
-  } catch (error) {
-    console.error('Error clearing data:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to clear data'
-    });
-  }
-});
+// DELETE endpoints removed: clearing/deleting records is disabled. Data is managed via uploads.
 
 module.exports = router;
