@@ -78,7 +78,7 @@ The system expects QR codes with this JSON format:
 ```json
 {
   "name": "John Doe",
-  "miNo": "MI12345",
+  "miNo": "MI-xyz-1234",
   "email": "john@example.com"
 }
 ```
@@ -139,7 +139,7 @@ Use any online QR code generator (e.g., https://www.qr-code-generator.com/):
 
 **Text to encode:**
 ```json
-{"name":"Test User","miNo":"MI001","email":"test@example.com"}
+{"name":"Test User","miNo":"MI-xyz-1234","email":"test@example.com"}
 ```
 
 ### Use Manual Input

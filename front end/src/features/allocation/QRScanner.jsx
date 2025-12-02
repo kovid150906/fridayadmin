@@ -6,6 +6,7 @@ import './QRScanner.css';
  * QR Scanner Component
  * Supports both web camera (phone) and hardware QR scanners
  * QR Code Expected Format: JSON string with { name, miNo, email }
+ * Example: {"name":"John Doe","miNo":"MI-xyz-1234","email":"john@example.com"}
  */
 const QRScanner = ({ onScanSuccess, onScanError }) => {
   const [isScanning, setIsScanning] = useState(false);
@@ -491,7 +492,7 @@ const QRScanner = ({ onScanSuccess, onScanError }) => {
               <textarea
                 value={manualInput}
                 onChange={(e) => setManualInput(e.target.value)}
-                placeholder='Paste QR data: {"name":"John Doe","miNo":"MIxyz1234","email":"john@example.com"}'
+                placeholder='Paste QR data: {"name":"John Doe","miNo":"MI-xyz-1234","email":"john@example.com"}'
                 className="manual-input"
                 rows="4"
               />
@@ -510,7 +511,7 @@ const QRScanner = ({ onScanSuccess, onScanError }) => {
       <div className="qr-format-info">
         <strong>Expected QR Format:</strong>
         <code>
-          {`{"name":"Full Name","miNo":"MIxyz1234","email":"email@example.com"}`}
+          {`{"name":"Full Name","miNo":"MI-xyz-1234","email":"email@example.com"}`}
         </code>
       </div>
     </div>

@@ -1,0 +1,149 @@
+import { useState } from 'react';
+import { auth, provider, signInWithPopup } from '../firebase';
+import { useNavigate } from 'react-router-dom';
+import EmailLogin from '../components/EmailLogin';
+import '../css/Login.css';
+import { FcGoogle } from 'react-icons/fc';
+import { MdEmail } from 'react-icons/md';
+
+const Login = () => {
+  const [useEmailLogin, setUseEmailLogin] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
+  const navigate = useNavigate();
+
+  const handleLogin = async () => {
+    try {
+      // Clear existing localStorage before login
+      localStorage.removeItem('jwtToken');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userName');
+      localStorage.removeItem('miNo');
+
+      const popupPromise = signInWithPopup(auth, provider);
+
+      const timeout = setTimeout(() => {
+        setLoading(true);
+        setLoadingMessage('Waiting for Google response...');
+      }, 1000);
+
+      const result = await popupPromise;
+      clearTimeout(timeout);
+
+      setLoading(true);
+      setLoadingMessage('Getting your information...');
+      const messages = ['Getting your information...', 'Verifying credentials...', 'Checking accommodation...'];
+      let msgIndex = 0;
+      const msgInterval = setInterval(() => {
+        setLoadingMessage(messages[msgIndex % messages.length]);
+        msgIndex++;
+      }, 1000);
+
+      const firebaseToken = await result.user.getIdToken();
+
+      const verifyRes = await fetch('https://edith.moodi.org/api/miauth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: firebaseToken }),
+        credentials: 'include',
+      });
+
+      const data = await verifyRes.json();
+
+      if (!data.verified || !data.token) {
+        clearInterval(msgInterval);
+        setLoading(false);
+        alert('Verification failed');
+        return;
+      }
+
+      localStorage.setItem('jwtToken', data.token);
+      localStorage.setItem('userEmail', data.email);
+
+      // Check accommodation with our backend
+      const accommodationRes = await fetch('/api/accommodation/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: data.email }),
+      });
+
+      const accommodationData = await accommodationRes.json();
+
+      clearInterval(msgInterval);
+      setLoading(false);
+
+      if (accommodationData.hasAccommodation) {
+        localStorage.setItem('userName', accommodationData.name);
+        localStorage.setItem('miNo', accommodationData.miNo);
+        
+        // Check if image already uploaded
+        if (accommodationData.imageUploaded) {
+          navigate('/pass');
+        } else {
+          navigate('/upload');
+        }
+      } else {
+        alert('No accommodation found for this email. Please contact support.');
+        localStorage.clear();
+      }
+    } catch (err) {
+      setLoading(false);
+      if (err.code === 'auth/popup-closed-by-user') {
+        alert('Sign-in cancelled.');
+      } else {
+        console.error('Login error:', err);
+        alert('Login failed. Please try again.');
+      }
+    }
+  };
+
+  return (
+    <div className='login-page'>
+      <div className="login-container">
+        <div className="login-header">
+          <div className="login-logo">🎭</div>
+          <h1 className="login-title">Mood Indigo 2025</h1>
+          <p className="login-subtitle">Accommodation Portal</p>
+          <p className="festival-tag">Asia's Largest College Cultural Festival</p>
+        </div>
+
+        {loading ? (
+          <div className="loading-container">
+            <div className="spinner"></div>
+            <p className="loading-message">{loadingMessage}</p>
+          </div>
+        ) : (
+          <>
+            <div className="login-toggle">
+              <button 
+                className={`toggle-btn ${!useEmailLogin ? 'active' : ''}`}
+                onClick={() => setUseEmailLogin(false)}
+              >
+                Google Login
+              </button>
+              <button 
+                className={`toggle-btn ${useEmailLogin ? 'active' : ''}`}
+                onClick={() => setUseEmailLogin(true)}
+              >
+                Email Login
+              </button>
+            </div>
+
+            <div className="login-method">
+              {!useEmailLogin ? (
+                <button className="google-login-btn" onClick={handleLogin}>
+                  <FcGoogle className="btn-icon" />
+                  <span>Sign in with Google</span>
+                </button>
+              ) : (
+                <EmailLogin />
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Login;
