@@ -239,6 +239,8 @@ const QRScanner = ({ onScanSuccess, onScanError }) => {
 
   // Process scanned QR data
   const handleScanResult = (decodedText) => {
+    console.log('Scanned data:', decodedText); // Debug log
+    
     try {
       // Try parsing as JSON
       const data = JSON.parse(decodedText);
@@ -254,14 +256,16 @@ const QRScanner = ({ onScanSuccess, onScanError }) => {
           setLastScanTime(new Date().toLocaleTimeString());
         }
       } else {
-        onScanError?.('Invalid QR format. Expected: name, miNo, email');
+        console.error('Invalid data format:', data);
+        onScanError?.('Invalid QR/Barcode format. Expected: name, miNo, email');
         if (scanMode === 'hardware') {
           setScannerStatus('ready');
           setHardwareScanning(false);
         }
       }
     } catch (err) {
-      onScanError?.('QR code must contain JSON: {"name":"...","miNo":"...","email":"..."}');
+      console.error('Parse error:', err, 'Raw data:', decodedText);
+      onScanError?.('QR/Barcode must contain JSON: {"name":"...","miNo":"...","email":"..."}');
       if (scanMode === 'hardware') {
         setScannerStatus('ready');
         setHardwareScanning(false);

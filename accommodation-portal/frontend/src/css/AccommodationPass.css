@@ -254,17 +254,45 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 220px;
+  min-height: 220px;
+}
+
+.qr-code-wrapper svg {
+  display: block !important;
+  width: 180px !important;
+  height: 180px !important;
 }
 
 .barcode-wrapper {
   background: #ffffff;
-  padding: 15px 25px;
+  padding: 15px 20px;
   border-radius: 12px;
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
   border: 2px solid #e0e0e0;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  max-width: 380px;
+}
+
+.barcode-wrapper svg {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+}
+
+.barcode-info {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.barcode-mi {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 1px;
 }
 
 /* Pass Footer */
@@ -394,10 +422,18 @@
 
   .qr-code-wrapper {
     padding: 15px;
+    min-width: 200px;
+    min-height: 200px;
+  }
+
+  .qr-code-wrapper svg {
+    width: 160px !important;
+    height: 160px !important;
   }
 
   .barcode-wrapper {
-    padding: 12px 20px;
+    padding: 12px 18px;
+    max-width: 340px;
   }
 }
 

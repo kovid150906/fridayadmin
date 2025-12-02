@@ -178,14 +178,17 @@ const AccommodationPass = () => {
                   <span className="code-label">Barcode</span>
                   <div className="barcode-wrapper">
                     <Barcode 
-                      value={miNo}
+                      value={qrData}
                       format="CODE128"
-                      width={2}
-                      height={70}
-                      displayValue={true}
-                      fontSize={16}
+                      width={5}
+                      height={700}
+                      displayValue={false}
                       background="transparent"
+                      margin={0}
                     />
+                  </div>
+                  <div className="barcode-info">
+                    <span className="barcode-mi">{miNo}</span>
                   </div>
                 </div>
               </div>
