@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import Allocation from './pages/Allocation';
+import Header from './components/Header';
+
+const API_BASE_URL = '/api';
 
 /**
  * Main App component - Handles authentication routing
@@ -10,16 +15,42 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already authenticated
-    const token = localStorage.getItem('friday_token') || sessionStorage.getItem('friday_token');
+    verifyToken();
+  }, []);
+
+  const verifyToken = async () => {
+    const token = localStorage.getItem('friday_token');
     const userInfo = localStorage.getItem('userInfo');
     
     if (token && userInfo) {
-      setIsAuthenticated(true);
+      try {
+        // Verify token with backend
+        const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          setIsAuthenticated(true);
+        } else {
+          // Token invalid, clear storage
+          localStorage.removeItem('friday_token');
+          localStorage.removeItem('userInfo');
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        // Network error, keep user logged in if token exists
+        setIsAuthenticated(true);
+      }
     }
     
     setIsLoading(false);
-  }, []);
+  };
 
   const handleLogin = (userInfo) => {
     setIsAuthenticated(true);
@@ -40,7 +71,18 @@ function App() {
     );
   }
 
-  return isAuthenticated ? <Dashboard /> : <Login onLogin={handleLogin} />;
+  if (!isAuthenticated) return <Login onLogin={handleLogin} />;
+
+  return (
+    <>
+      <Header />
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/allocation" element={<Allocation />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
+  );
 }
 
 export default App;

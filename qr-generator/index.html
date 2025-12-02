@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mood Indigo - QR Code Generator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎭 Mood Indigo QR Generator</h1>
+      <p class="subtitle">Generate QR codes for visitor allocation system</p>
+    </header>
+
+    <div class="card">
+      <h2>Visitor Information</h2>
+      <form id="qrForm">
+        <div class="form-group">
+          <label for="name">Full Name *</label>
+          <input 
+            type="text" 
+            id="name" 
+            placeholder="e.g., John Doe" 
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="miNo">MI Number *</label>
+          <input 
+            type="text" 
+            id="miNo" 
+            placeholder="e.g., MIxyz1234" 
+            required
+            pattern="MI[a-z]{3}[0-9]{4}"
+            title="Format: MIxyz1234 (MI followed by 3 lowercase letters and 4 digits)"
+          />
+          <small>Format: MI + 3 letters + 4 digits (e.g., MIxyz1234)</small>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address *</label>
+          <input 
+            type="email" 
+            id="email" 
+            placeholder="e.g., john@example.com" 
+            required
+          />
+        </div>
+
+        <button type="submit" class="btn-generate">
+          Generate QR Code
+        </button>
+      </form>
+    </div>
+
+    <div class="card qr-output" id="qrOutput" style="display: none;">
+      <h2>Generated QR Code</h2>
+      <div id="qrcode"></div>
+      
+      <div class="data-preview">
+        <h3>JSON Data:</h3>
+        <pre id="jsonData"></pre>
+      </div>
+
+      <div class="button-group">
+        <button class="btn-download" id="downloadBtn">
+          📥 Download QR Code
+        </button>
+        <button class="btn-reset" id="resetBtn">
+          🔄 Generate Another
+        </button>
+        <button class="btn-print" id="printBtn">
+          🖨️ Print QR Code
+        </button>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <h3>📋 Instructions</h3>
+      <ul>
+        <li>Fill in all visitor details in the form above</li>
+        <li>MI Number must follow format: <code>MIxyz1234</code></li>
+        <li>Click "Generate QR Code" to create the QR code</li>
+        <li>Download or print the QR code for the visitor</li>
+        <li>This QR code can be scanned at the allocation desk</li>
+      </ul>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

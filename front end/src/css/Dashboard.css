@@ -8,88 +8,18 @@
   color: #e2e8f0;
 }
 
-/* Header Styles */
-.dashboard-header {
-  background: rgba(15, 23, 42, 0.8);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-  padding: 1.25rem 2rem;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  border-bottom: 1px solid rgba(56, 189, 248, 0.1);
+/* Global CSS variables used across pages (header height) */
+:root {
+  --header-height: 96px;
+  --nav-height: 0px;
 }
 
-.header-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* Reserve space at top for fixed header */
+.dashboard-container {
+  padding-top: calc(var(--header-height) + var(--nav-height));
 }
 
-.header-left h1 {
-  margin: 0;
-  color: #f8fafc;
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-}
-
-.header-subtitle {
-  margin: 0.25rem 0 0 0;
-  color: #38bdf8;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  padding: 0.5rem 1rem;
-  background: rgba(56, 189, 248, 0.1);
-  border-radius: 8px;
-  border: 1px solid rgba(56, 189, 248, 0.2);
-}
-
-.user-icon {
-  font-size: 1.125rem;
-}
-
-.username {
-  font-weight: 600;
-  color: #f8fafc;
-  font-size: 0.9375rem;
-}
-
-.logout-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: rgba(56, 189, 248, 0.2);
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  border-radius: 8px;
-  font-weight: 500;
-  font-size: 0.9375rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.logout-btn:hover {
-  background: rgba(56, 189, 248, 0.3);
-  border-color: rgba(56, 189, 248, 0.5);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
-}
+/* Header/nav styles moved to `navbar.css` */
 
 /* Main Content */
 .dashboard-main {
@@ -250,25 +180,6 @@
   background: rgba(56, 189, 248, 0.2);
   color: #7dd3fc;
   border: 1px solid rgba(56, 189, 248, 0.3);
-}
-
-.clear-btn {
-  margin-top: 1rem;
-  padding: 0.625rem 1.25rem;
-  background: #e53e3e;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.clear-btn:hover {
-  background: #c53030;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(229, 62, 62, 0.3);
 }
 
 /* Data Section */
@@ -493,5 +404,91 @@
 
   .upload-box h3 {
     font-size: 1rem;
+  }
+}
+
+/* Allocation page layout */
+.allocation-container {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1.5rem;
+}
+
+/* Ensure allocation page content sits below fixed header */
+.allocation-page {
+  padding-top: calc(var(--header-height) + var(--nav-height));
+}
+
+.allocation-sidebar {
+  background: rgba(15, 23, 42, 0.7);
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid rgba(56, 189, 248, 0.06);
+  min-height: 420px;
+}
+
+.hostel-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.hostel-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #cfeefe;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.hostel-item:hover {
+  background: rgba(56, 189, 248, 0.04);
+  border-color: rgba(56, 189, 248, 0.06);
+}
+
+.hostel-item.selected {
+  background: linear-gradient(90deg, rgba(56,189,248,0.12), rgba(14,165,233,0.06));
+  border-color: rgba(56, 189, 248, 0.12);
+  box-shadow: 0 6px 18px rgba(14,165,233,0.06);
+  color: #e6f9ff;
+}
+
+.hostel-name { font-weight: 700; }
+.hostel-count { font-size: 0.85rem; color: #94a3b8; }
+
+.allocation-main {
+  background: rgba(15, 23, 42, 0.7);
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid rgba(56, 189, 248, 0.06);
+  min-height: 420px;
+}
+
+.allocation-table .data-table th {
+  position: sticky;
+  /* Stick to top of the scrollable wrapper */
+  top: 0;
+  z-index: 3;
+  background: rgba(15, 23, 42, 0.95);
+}
+
+/* Ensure the table wrapper creates its own stacking context for sticky headers */
+.table-wrapper {
+  position: relative;
+}
+
+@media (max-width: 900px) {
+  .allocation-container {
+    grid-template-columns: 1fr;
+  }
+  .allocation-sidebar {
+    min-height: 140px;
   }
 }

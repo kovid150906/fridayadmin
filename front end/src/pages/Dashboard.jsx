@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import '../css/Dashboard.css';
 
 // API Configuration
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = 'http://localhost:3001/api';
 
 const Dashboard = () => {
   const [csvData, setCsvData] = useState([]);
@@ -12,6 +12,7 @@ const Dashboard = () => {
   const [uploadStatus, setUploadStatus] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
+  // routing handled by react-router now
 
   // Get user info from localStorage
   const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
@@ -46,7 +47,7 @@ const Dashboard = () => {
         setCsvData([]);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
+      // Silently handle fetch errors
     }
   };
 
@@ -62,7 +63,7 @@ const Dashboard = () => {
         setHostelList(result.hostels);
       }
     } catch (error) {
-      console.error('Error fetching hostel list:', error);
+      // Silently handle fetch errors
     }
   };
 
@@ -151,7 +152,6 @@ const Dashboard = () => {
       // Upload combined rows to backend
       await uploadToBackend(allRows);
     } catch (error) {
-      console.error('Error processing files:', error);
       setUploadStatus('Error processing files');
       setIsUploading(false);
     }
@@ -190,7 +190,6 @@ const Dashboard = () => {
         setIsUploading(false);
       }
     } catch (error) {
-      console.error('Upload error:', error);
       setUploadStatus('❌ Failed to upload data to server');
       setIsUploading(false);
     }
@@ -209,150 +208,121 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-container">
-      {/* Header */}
-      <header className="dashboard-header">
-        <div className="header-content">
-          <div className="header-left">
-            <h1>Mood Indigo Dashboard</h1>
-            <p className="header-subtitle">Hospi & PR Team Portal</p>
-          </div>
-          <div className="header-right">
-            <div className="user-info">
-              <span className="user-icon">👤</span>
-              <span className="username">{username}</span>
-            </div>
-            <button className="logout-btn" onClick={handleLogout}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M6 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V3.33333C2 2.97971 2.14048 2.64057 2.39052 2.39052C2.64057 2.14048 2.97971 2 3.33333 2H6M10.6667 11.3333L14 8M14 8L10.6667 4.66667M14 8H6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
 
       {/* Main Content */}
       <main className="dashboard-main">
-        <div className="dashboard-grid">
-          
-          {/* CSV Upload Section */}
-          <section className="upload-section">
-            <div className="section-header">
-              <h2>📋 Data Upload</h2>
-              <p>Upload CSV with: Hostel Name, Available Room No., Room Capacity</p>
-            </div>
-            
-            <div className="upload-area">
-              <div 
-                className={`upload-box ${isDragging ? 'dragging' : ''}`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-              >
-                <div className="upload-icon">📁</div>
-                <h3>Select or Drop CSV File</h3>
-                <p>Required columns:<br/>
-                  • Hostel Name<br/>
-                  • Available Room No.<br/>
-                  • Room Capacity<br/>
-                  • Room Password (required)
-                </p>
-                
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".csv"
-                  multiple
-                  onChange={handleFileSelect}
-                  className="file-input"
-                  id="csvFile"
-                  disabled={isUploading}
-                />
+          <div className="dashboard-grid">
+            {/* CSV Upload Section */}
+            <section className="upload-section">
+              <div className="section-header">
+                <h2>📋 Data Upload</h2>
+                <p>Upload CSV with: Hostel Name, Available Room No., Room Capacity</p>
+              </div>
+              <div className="upload-area">
+                <div 
+                  className={`upload-box ${isDragging ? 'dragging' : ''}`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  <div className="upload-icon">📁</div>
+                  <h3>Select or Drop CSV File</h3>
+                  <p>Required columns:<br/>
+                    • Hostel Name<br/>
+                    • Available Room No.<br/>
+                    • Room Capacity<br/>
+                    • Room Password (required)
+                  </p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv"
+                    multiple
+                    onChange={handleFileSelect}
+                    className="file-input"
+                    id="csvFile"
+                    disabled={isUploading}
+                  />
 
-                <label htmlFor="csvFile" className={`upload-btn ${isUploading ? 'disabled' : ''}`}>
-                  {isUploading ? 'Processing...' : 'Choose Files'}
-                </label>
-                
-                {uploadStatus && (
-                  <div className={`upload-status ${csvData.length > 0 ? 'success' : uploadStatus.includes('❌') ? 'error' : 'info'}`}>
-                    {uploadStatus}
+                  <label htmlFor="csvFile" className={`upload-btn ${isUploading ? 'disabled' : ''}`}>
+                    {isUploading ? 'Processing...' : 'Choose Files'}
+                  </label>
+
+                  {uploadStatus && (
+                    <div className={`upload-status ${csvData.length > 0 ? 'success' : uploadStatus.includes('❌') ? 'error' : 'info'}`}>
+                      {uploadStatus}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            {/* Data Display Section */}
+            <section className="data-section">
+              <div className="section-header">
+                <h2>📊 Data Overview</h2>
+                <p>Hostel accommodation data</p>
+              </div>
+              <div className="data-container">
+                {csvData.length === 0 ? (
+                  <div className="empty-state">
+                    <div className="empty-icon">📄</div>
+                    <h3>No Data Available</h3>
+                    <p>Upload a CSV file with hostel data to view here</p>
+                  </div>
+                ) : (
+                  <div className="data-table-container">
+                    <div className="table-info">
+                      <span className="record-count">
+                        {csvData.length} hostel record{csvData.length !== 1 ? 's' : ''} loaded
+                      </span>
+                      {hostelList.length > 0 && (
+                        <div className="hostel-filter">
+                          <label htmlFor="hostel-select">Filter by Hostel:</label>
+                          <select 
+                            id="hostel-select"
+                            value={selectedHostel} 
+                            onChange={(e) => setSelectedHostel(e.target.value)}
+                            className="hostel-dropdown"
+                          >
+                            <option value="all">All Hostels ({hostelList.reduce((sum, h) => sum + h.roomCount, 0)} rooms)</option>
+                            {hostelList.map(hostel => (
+                              <option key={hostel.name} value={hostel.name}>
+                                {hostel.name} ({hostel.roomCount} room{hostel.roomCount !== 1 ? 's' : ''})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                    <div className="table-wrapper">
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            <th>Hostel Name</th>
+                            <th>Available Room No.</th>
+                            <th>Room Capacity</th>
+                            <th>Room Password</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {csvData.map((row, index) => (
+                            <tr key={row.id || index}>
+                              <td>{row['hostel name']}</td>
+                              <td>{row['available room no.']}</td>
+                              <td>{row['room capacity']}</td>
+                              <td>{row['room password']}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 )}
-                
-                {/* Clear button removed — backend handles deduplication and data is persistent in-memory */}
               </div>
-            </div>
-          </section>
-
-          {/* Data Display Section */}
-          <section className="data-section">
-            <div className="section-header">
-              <h2>📊 Data Overview</h2>
-              <p>Hostel accommodation data</p>
-            </div>
-            
-            <div className="data-container">
-              {csvData.length === 0 ? (
-                <div className="empty-state">
-                  <div className="empty-icon">📄</div>
-                  <h3>No Data Available</h3>
-                  <p>Upload a CSV file with hostel data to view here</p>
-                </div>
-              ) : (
-                <div className="data-table-container">
-                  <div className="table-info">
-                    <span className="record-count">
-                      {csvData.length} hostel record{csvData.length !== 1 ? 's' : ''} loaded
-                    </span>
-                    
-                    {hostelList.length > 0 && (
-                      <div className="hostel-filter">
-                        <label htmlFor="hostel-select">Filter by Hostel:</label>
-                        <select 
-                          id="hostel-select"
-                          value={selectedHostel} 
-                          onChange={(e) => setSelectedHostel(e.target.value)}
-                          className="hostel-dropdown"
-                        >
-                          <option value="all">All Hostels ({hostelList.reduce((sum, h) => sum + h.roomCount, 0)} rooms)</option>
-                          {hostelList.map(hostel => (
-                            <option key={hostel.name} value={hostel.name}>
-                              {hostel.name} ({hostel.roomCount} room{hostel.roomCount !== 1 ? 's' : ''})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="table-wrapper">
-                    <table className="data-table">
-                      <thead>
-                        <tr>
-                          <th>Hostel Name</th>
-                          <th>Available Room No.</th>
-                          <th>Room Capacity</th>
-                          <th>Room Password</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {csvData.map((row, index) => (
-                          <tr key={row.id || index}>
-                            <td>{row['hostel name']}</td>
-                            <td>{row['available room no.']}</td>
-                            <td>{row['room capacity']}</td>
-                            <td>{row['room password']}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </div>
-          </section>
-        </div>
-      </main>
+            </section>
+          </div>
+        </main>
     </div>
   );
 };

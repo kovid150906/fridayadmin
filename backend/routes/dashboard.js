@@ -109,8 +109,6 @@ router.post('/upload', (req, res) => {
 
       hostelData = finalRecords;
 
-      console.log(`✅ Uploaded ${newRecords.length} new hostel records, total unique: ${hostelData.length}`);
-
       res.json({
         success: true,
         message: `Successfully uploaded ${newRecords.length} records, total unique: ${hostelData.length}`,
@@ -120,7 +118,6 @@ router.post('/upload', (req, res) => {
         }
       });
   } catch (error) {
-    console.error('Error uploading CSV:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to upload CSV data'
@@ -150,7 +147,6 @@ router.get('/data', (req, res) => {
       message: 'Data retrieved successfully'
     });
   } catch (error) {
-    console.error('Error fetching dashboard data:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch data'
@@ -190,24 +186,11 @@ router.get('/hostels', (req, res) => {
       totalRooms: hostelData.length
     });
   } catch (error) {
-    console.error('Error fetching hostels:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch hostel list'
     });
   }
 });
-
-/**
- * DELETE /api/dashboard/data/:id
- * Delete a specific record
- */
-// DELETE endpoints removed: clearing/deleting records is disabled. Data is managed via uploads.
-
-/**
- * DELETE /api/dashboard/data
- * Clear all data
- */
-// DELETE endpoints removed: clearing/deleting records is disabled. Data is managed via uploads.
 
 module.exports = router;

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import '../css/Login.css';
 
 // API Configuration
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = '/api';
 
 /**
  * Login page component - Backend authentication
@@ -40,6 +40,11 @@ const Login = ({ onLogin }) => {
 
       if (data.success) {
         setStatusMessage(`Welcome to Mood Indigo, ${username}!`);
+        
+        // Store token and user info
+        localStorage.setItem('friday_token', data.data.token);
+        localStorage.setItem('userInfo', JSON.stringify({ username: data.data.username }));
+        
         setTimeout(() => {
           const userInfo = { username: data.data.username };
           onLogin(userInfo);
@@ -49,7 +54,6 @@ const Login = ({ onLogin }) => {
         setIsLoading(false);
       }
     } catch (error) {
-      console.error('Login error:', error);
       setStatusMessage('Connection error. Please try again.');
       setIsLoading(false);
     }
