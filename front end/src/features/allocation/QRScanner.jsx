@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import './QRScanner.css';
 
 /**
- * QR Scanner Component
- * Supports both web camera (phone) and hardware QR scanners
- * QR Code Expected Format: JSON string with { name, miNo, email }
- * Example: {"name":"John Doe","miNo":"MI-xyz-1234","email":"john@example.com"}
+ * QR & Barcode Scanner Component
+ * Supports both web camera (phone) and hardware QR/barcode scanners
+ * Supported Formats:
+ * - QR Code: JSON string with { name, miNo, email }
+ *   Example: {"name":"John Doe","miNo":"MI-xyz-1234","email":"john@example.com"}
+ * - Barcode: CODE_128, CODE_39, EAN, UPC formats
+ *   Barcode data should encode the same JSON format or MI number
  */
 const QRScanner = ({ onScanSuccess, onScanError }) => {
   const [isScanning, setIsScanning] = useState(false);
@@ -166,7 +169,22 @@ const QRScanner = ({ onScanSuccess, onScanError }) => {
         cameraId,
         {
           fps: 10,
-          qrbox: { width: 250, height: 250 }
+          qrbox: { width: 250, height: 250 },
+          // Enable both QR codes and barcodes
+          formatsToSupport: [
+            // QR Code
+            Html5QrcodeSupportedFormats.QR_CODE,
+            // Barcodes
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.CODE_93,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.ITF,
+            Html5QrcodeSupportedFormats.CODABAR
+          ]
         },
         (decodedText) => {
           handleScanResult(decodedText);
@@ -317,7 +335,7 @@ const QRScanner = ({ onScanSuccess, onScanError }) => {
   return (
     <div className="qr-scanner-container">
       <div className="scanner-header">
-        <h3>Scan Visitor QR Code</h3>
+        <h3>Scan QR Code / Barcode</h3>
         <div className="scan-mode-toggle">
           <button
             className={scanMode === 'camera' ? 'active' : ''}
@@ -338,8 +356,9 @@ const QRScanner = ({ onScanSuccess, onScanError }) => {
         <div className="camera-scanner">
           {!camerasLoaded ? (
             <div className="camera-ready">
-              <p>📷 Camera Mode</p>
+              <p>📷 Camera Mode - QR & Barcode Support</p>
               <p className="info-text">Click "Start Scanning" to activate your camera</p>
+              <p className="info-text-small">Supports QR codes and common barcode formats (CODE_128, EAN, UPC, etc.)</p>
               
               <div id="qr-reader" className="qr-reader-box"></div>
 
@@ -398,7 +417,7 @@ const QRScanner = ({ onScanSuccess, onScanError }) => {
                 {scannerStatus === 'checking' && '🔍 Detecting Scanner...'}
                 {scannerStatus === 'disconnected' && '⚠️ No Scanner Connected'}
                 {scannerStatus === 'ready' && `✅ Scanner Ready (${detectedDevices.length} device${detectedDevices.length > 1 ? 's' : ''} found)`}
-                {scannerStatus === 'scanning' && '📡 Scanning QR Code...'}
+                {scannerStatus === 'scanning' && '📡 Scanning QR/Barcode...'}
               </span>
             </div>
             {lastScanTime && scannerStatus === 'ready' && (
@@ -423,9 +442,9 @@ const QRScanner = ({ onScanSuccess, onScanError }) => {
 
           {scannerStatus === 'disconnected' ? (
             <div className="no-scanner-message">
-              <p>⚠️ No hardware QR scanner detected via USB/HID</p>
+              <p>⚠️ No hardware QR/Barcode scanner detected via USB/HID</p>
               <p className="info-text">
-                Most QR scanners work as keyboard devices and won't be detected here.<br/>
+                Most QR/Barcode scanners work as keyboard devices and won't be detected here.<br/>
                 If you have a keyboard-type scanner, you can still use it!
               </p>
               <div className="button-group">
@@ -448,8 +467,8 @@ const QRScanner = ({ onScanSuccess, onScanError }) => {
               <div className="hardware-info">
                 <p className="info-text">
                   {scannerStatus === 'scanning' 
-                    ? 'Scanning active. Scan your QR code now or click Stop to cancel.'
-                    : 'Click "Scan QR Code" to start scanning.'}
+                    ? 'Scanning active. Scan your QR code or Barcode now or click Stop to cancel.'
+                    : 'Click "Scan QR/Barcode" to start scanning.'}
                 </p>
               </div>
               
@@ -460,7 +479,7 @@ const QRScanner = ({ onScanSuccess, onScanError }) => {
                       onClick={startHardwareScanning} 
                       className="scan-btn start"
                     >
-                      Scan QR Code
+                      Scan QR/Barcode
                     </button>
                     <button 
                       onClick={refreshHardwareDetection} 
@@ -487,12 +506,12 @@ const QRScanner = ({ onScanSuccess, onScanError }) => {
 
           {/* Manual input as fallback */}
           <details className="manual-input-section">
-            <summary>Or paste QR data manually</summary>
+            <summary>Or paste QR/Barcode data manually</summary>
             <form onSubmit={handleManualSubmit} className="manual-input-form">
               <textarea
                 value={manualInput}
                 onChange={(e) => setManualInput(e.target.value)}
-                placeholder='Paste QR data: {"name":"John Doe","miNo":"MI-xyz-1234","email":"john@example.com"}'
+                placeholder='Paste QR/Barcode data: {"name":"John Doe","miNo":"MI-xyz-1234","email":"john@example.com"}'
                 className="manual-input"
                 rows="4"
               />
@@ -501,7 +520,7 @@ const QRScanner = ({ onScanSuccess, onScanError }) => {
                 className="scan-btn submit"
                 disabled={!manualInput.trim()}
               >
-                Process QR Data
+                Process QR/Barcode Data
               </button>
             </form>
           </details>

@@ -69,6 +69,12 @@
   font-size: 0.875rem;
 }
 
+.camera-ready .info-text-small {
+  color: #64748b;
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
 .camera-loading {
   text-align: center;
   padding: 2rem 1rem;
