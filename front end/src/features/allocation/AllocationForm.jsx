@@ -1,26 +1,35 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   addAllocation,
   isPersonAllocated,
   getAllocationByMiNo
 } from './AllocationStorage';
-import './AllocationForm.css';
+import '../../css/AllocationForm.css';
 
 /**
  * Allocation Form Component
  * Handles room selection and person allocation
+ * Auto-allocates when QR is scanned (no button needed)
  */
 const AllocationForm = ({ 
   scannedPerson, 
   availableRooms,
   allocatedRooms = [],
   isLoadingAllocations = false,
+  isSyncing = false,
   onAllocationSuccess,
   onAllocationError 
 }) => {
   const [selectedHostel, setSelectedHostel] = useState('');
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isAllocating, setIsAllocating] = useState(false);
+
+  // Auto-allocate when person is scanned and room is selected
+  useEffect(() => {
+    if (scannedPerson && selectedRoom && !isAllocating && !isLoadingAllocations && !isSyncing) {
+      handleAllocate();
+    }
+  }, [scannedPerson]); // Only trigger when scannedPerson changes
 
   // Get unique hostels from available rooms
   const hostels = [...new Set(availableRooms.map(r => r['hostel name']))].sort();
@@ -113,13 +122,15 @@ const AllocationForm = ({
 
       if (result.success) {
         onAllocationSuccess?.(result.allocation);
-        // Reset selection
-        setSelectedRoom(null);
+        // Keep room selected for next scan (don't reset)
+        // setSelectedRoom(null); // REMOVED - keep room selected
       } else {
         onAllocationError?.(result.error);
       }
     } catch (err) {
-      onAllocationError?.('Failed to allocate room');
+      console.error('Allocation error:', err);
+      const errorMsg = err.message || 'Failed to allocate room. Please try again.';
+      onAllocationError?.(errorMsg);
     } finally {
       setIsAllocating(false);
     }
@@ -127,99 +138,102 @@ const AllocationForm = ({
 
   return (
     <div className="allocation-form-container">
-      <div className="form-section">
-        <h3>Person Details</h3>
-        {scannedPerson ? (
-          <div className="person-card">
-            <div className="person-detail">
-              <span className="label">Name:</span>
-              <span className="value">{scannedPerson.name}</span>
-            </div>
-            <div className="person-detail">
-              <span className="label">MI No:</span>
-              <span className="value">{scannedPerson.miNo}</span>
-            </div>
-            <div className="person-detail">
-              <span className="label">Email:</span>
-              <span className="value">{scannedPerson.email}</span>
-            </div>
+      {/* Syncing Overlay */}
+      {isSyncing && (
+        <div className="syncing-overlay">
+          <div className="syncing-message">
+            <div className="spinner"></div>
+            <h3>🔄 Syncing to Database...</h3>
+            <p>Please wait. New allocations are paused.</p>
           </div>
-        ) : (
-          <div className="empty-state">
-            <p>Scan a QR code to view person details</p>
-          </div>
-        )}
+        </div>
+      )}
+
+      {/* Hostel Selector at Top */}
+      <div className="hostel-selector-top">
+        <label>Select Hostel:</label>
+        <select
+          value={selectedHostel}
+          onChange={(e) => {
+            setSelectedHostel(e.target.value);
+            setSelectedRoom(null);
+          }}
+          className="form-select-large"
+          disabled={isSyncing}
+        >
+          <option value="">-- Select Hostel --</option>
+          {hostels.map(hostel => (
+            <option key={hostel} value={hostel}>{hostel}</option>
+          ))}
+        </select>
       </div>
 
-      <div className="form-section">
-        <h3>Select Room</h3>
-        
-        <div className="hostel-selector">
-          <label>Hostel:</label>
-          <select
-            value={selectedHostel}
-            onChange={(e) => {
-              setSelectedHostel(e.target.value);
-              setSelectedRoom(null);
-            }}
-            className="form-select"
-          >
-            <option value="">-- Select Hostel --</option>
-            {hostels.map(hostel => (
-              <option key={hostel} value={hostel}>{hostel}</option>
-            ))}
-          </select>
-        </div>
-
-        {selectedHostel && (
-          <div className="rooms-list">
-            {filteredRooms.length === 0 ? (
-              <p className="no-rooms">No rooms available in this hostel</p>
-            ) : (
-              filteredRooms.map((room, idx) => {
+      {/* Room Grid - 10x10 Scrollable */}
+      {selectedHostel && (
+        <div className="room-grid-wrapper">
+          {filteredRooms.length === 0 ? (
+            <p className="no-rooms">No rooms available in this hostel</p>
+          ) : (
+            <div className="room-grid">
+              {filteredRooms.map((room, idx) => {
                 const availableCapacity = getAvailableCapacity(room);
                 const occupancyDisplay = getRoomOccupancyDisplay(room);
                 const isFull = availableCapacity <= 0;
+                const isSelected = selectedRoom === room;
                 
                 return (
                   <div
                     key={idx}
-                    className={`room-card ${selectedRoom === room ? 'selected' : ''} ${isFull ? 'full' : ''}`}
-                    onClick={() => !isFull && handleRoomSelect(room)}
+                    className={`room-grid-cell ${isSelected ? 'selected' : ''} ${isFull ? 'full' : ''} ${isSyncing ? 'disabled' : ''}`}
+                    onClick={() => !isFull && !isSyncing && handleRoomSelect(room)}
+                    title={`Room ${room['available room no.']} - ${occupancyDisplay} - Password: ${room['room password'] || 'N/A'}`}
                   >
-                    <div className="room-header">
-                      <span className="room-no">Room {room['available room no.']}</span>
-                      <span className={`capacity-badge ${isFull ? 'full' : ''}`}>
-                        {occupancyDisplay} occupied
-                      </span>
-                    </div>
-                    <div className="room-password">
-                      Password: {room['room password'] || 'N/A'}
-                    </div>
-                    {isFull && <div className="full-label">FULL</div>}
+                    <div className="room-number">{room['available room no.']}</div>
+                    <div className="room-capacity">{occupancyDisplay}</div>
+                    {isFull && <div className="full-badge">FULL</div>}
                   </div>
                 );
-              })
-            )}
-          </div>
-        )}
-      </div>
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
-      <div className="form-actions">
-        {isLoadingAllocations && (
-          <div style={{ textAlign: 'center', color: '#f59e0b', marginBottom: '10px' }}>
-            ⏳ Loading allocation data...
+      {!selectedHostel && (
+        <div className="empty-state-grid">
+          <p>👆 Select a hostel above to view rooms</p>
+        </div>
+      )}
+
+      {/* Selected Room Info */}
+      {selectedRoom && (
+        <div className="selected-room-banner">
+          <div className="selected-info">
+            <span className="label">Selected:</span>
+            <span className="value">{selectedRoom['hostel name']} - Room {selectedRoom['available room no.']}</span>
           </div>
-        )}
-        <button
-          onClick={handleAllocate}
-          disabled={!scannedPerson || !selectedRoom || isAllocating || isLoadingAllocations}
-          className="allocate-btn"
-          title={isLoadingAllocations ? 'Please wait for allocation data to load' : ''}
-        >
-          {isAllocating ? 'Allocating...' : isLoadingAllocations ? 'Loading...' : '✓ Allocate Room'}
-        </button>
-      </div>
+          <div className="selected-info">
+            <span className="label">Password:</span>
+            <span className="value">{selectedRoom['room password'] || 'N/A'}</span>
+          </div>
+          <div className="selected-info">
+            <span className="label">Occupancy:</span>
+            <span className="value">{getRoomOccupancyDisplay(selectedRoom)}</span>
+          </div>
+          {getAvailableCapacity(selectedRoom) > 0 ? (
+            <div className="status-ready">✓ Ready to scan</div>
+          ) : (
+            <div className="status-full">⚠️ Room FULL</div>
+          )}
+        </div>
+      )}
+
+      {/* Scanned Person Info - Compact */}
+      {scannedPerson && (
+        <div className="scanned-person-compact">
+          <strong>Last Scan:</strong> {scannedPerson.name} ({scannedPerson.miNo})
+        </div>
+      )}
     </div>
   );
 };

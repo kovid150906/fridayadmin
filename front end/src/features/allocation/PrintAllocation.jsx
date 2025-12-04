@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getAllocations, clearAllocations, getAllocationStats } from './AllocationStorage';
-import './PrintAllocation.css';
+import '../../css/PrintAllocation.css';
 
 const API_BASE_URL = '/api';
 
@@ -10,8 +10,7 @@ const API_BASE_URL = '/api';
  * Print Allocation Component
  * Generates PDF and syncs data to backend
  */
-const PrintAllocation = ({ onSyncSuccess, onSyncError }) => {
-  const [isPrinting, setIsPrinting] = useState(false);
+const PrintAllocation = ({ onSyncSuccess, onSyncError, onSyncStart, onSyncEnd }) => {
   const [isSyncing, setIsSyncing] = useState(false);
   const stats = getAllocationStats();
 
@@ -125,23 +124,6 @@ const PrintAllocation = ({ onSyncSuccess, onSyncError }) => {
     return doc;
   };
 
-  // Print PDF
-  const handlePrint = () => {
-    setIsPrinting(true);
-    try {
-      const doc = generatePDF();
-      if (doc) {
-        doc.save(`allocations_${Date.now()}.pdf`);
-        setTimeout(() => setIsPrinting(false), 500);
-      } else {
-        setIsPrinting(false);
-      }
-    } catch (err) {
-      onSyncError?.('Failed to generate PDF');
-      setIsPrinting(false);
-    }
-  };
-
   // Sync to backend and clear local storage
   const handleSyncAndPrint = async () => {
     const allocations = getAllocations();
@@ -152,54 +134,98 @@ const PrintAllocation = ({ onSyncSuccess, onSyncError }) => {
     }
 
     setIsSyncing(true);
+    onSyncStart?.(); // Notify parent that syncing started
 
-    try {
-      // Sync to backend first with timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
-      
-      const response = await fetch(`${API_BASE_URL}/allocation/save`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ allocations }),
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
-      }
-      
-      const result = await response.json();
+    let retryCount = 0;
 
-      if (result.success) {
-        // Generate and save PDF only after successful database sync
-        const doc = generatePDF();
-        if (doc) {
-          doc.save(`allocations_${Date.now()}.pdf`);
-        }
-
-        // Clear local storage only after both sync and PDF generation succeed
-        clearAllocations();
+    const attemptSync = async () => {
+      try {
+        // Sync to backend first with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout per attempt
         
-        onSyncSuccess?.(`✅ Successfully synced ${allocations.length} allocations to database and generated PDF`);
-      } else {
-        throw new Error(result.error || 'Failed to sync allocations');
+        const response = await fetch(`${API_BASE_URL}/allocation/save`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ allocations }),
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`);
+        }
+        
+        const result = await response.json();
+
+        if (result.success) {
+          // Generate and print PDF only after successful database sync
+          const doc = generatePDF();
+          if (doc) {
+            // Create iframe for silent printing (no new tab)
+            const pdfBlob = doc.output('blob');
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+            
+            // Create hidden iframe
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'fixed';
+            iframe.style.right = '0';
+            iframe.style.bottom = '0';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = 'none';
+            
+            document.body.appendChild(iframe);
+            
+            iframe.onload = () => {
+              iframe.contentWindow.print();
+              
+              // Clean up after printing
+              setTimeout(() => {
+                document.body.removeChild(iframe);
+                URL.revokeObjectURL(pdfUrl);
+              }, 1000);
+            };
+            
+            iframe.src = pdfUrl;
+          }
+
+          // Clear local storage only after both sync and PDF generation succeed
+          clearAllocations();
+          
+          onSyncSuccess?.(`✅ Successfully synced ${allocations.length} allocations to database and generated PDF`);
+        } else {
+          throw new Error(result.error || 'Failed to sync allocations');
+        }
+      } catch (err) {
+        console.error(`Sync attempt ${retryCount + 1} failed:`, err);
+        
+        retryCount++;
+        
+        // Provide more specific error messages
+        let errorMsg = `⚠️ Sync failed. Retrying... (Attempt ${retryCount})`;
+        
+        if (err.name === 'AbortError') {
+          errorMsg = `⏱️ Request timed out. Retrying... (Attempt ${retryCount})`;
+        } else if (err.message.includes('Failed to fetch')) {
+          errorMsg = `🔌 Network error. Retrying... (Attempt ${retryCount})`;
+        } else if (err.message.includes('Server error')) {
+          errorMsg = `❌ Server error (${err.message}). Retrying... (Attempt ${retryCount})`;
+        }
+        
+        onSyncError?.(errorMsg);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return attemptSync(); // Recursive retry - continues forever
+      } finally {
+        setIsSyncing(false);
+        onSyncEnd?.();
       }
-    } catch (err) {
-      console.error('Sync error:', err);
-      
-      if (err.name === 'AbortError') {
-        onSyncError?.('⚠️ Sync timeout. Please check your connection and try again. Data remains in local storage.');
-      } else {
-        onSyncError?.(`⚠️ Failed to sync to database: ${err.message}. Data remains safely in local storage. Try again when connection improves.`);
-      }
-    } finally {
-      setIsSyncing(false);
-    }
+    };
+
+    await attemptSync();
   };
 
   return (
@@ -242,16 +268,16 @@ const PrintAllocation = ({ onSyncSuccess, onSyncError }) => {
           disabled={stats.totalAllocations === 0 || isSyncing}
           className="print-btn sync"
         >
-          {isSyncing ? 'Syncing...' : '🖨️ Print & Save to Database'}
+          {isSyncing ? 'Processing...' : '🖨️ Print & Save'}
         </button>
       </div>
 
       <div className="info-box">
-        <strong>ℹ️ Important:</strong>
+        <strong>ℹ️ How it works:</strong>
         <p>
-          • Generates PDF and saves all allocations to database<br />
-          • Local storage will be cleared only after successful sync<br />
-          • All room allocations will be printed in the PDF
+          • Prints all allocations from local storage<br />
+          • Saves to backend database<br />
+          • Clears local storage after successful save
         </p>
       </div>
     </div>

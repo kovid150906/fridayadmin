@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import '../css/Dashboard.css';
+import RoomAllocationView from '../components/RoomAllocationView';
 
 // API Configuration
 const API_BASE_URL = 'http://localhost:3001/api';
@@ -260,8 +261,8 @@ const Dashboard = () => {
             {/* Data Display Section */}
             <section className="data-section">
               <div className="section-header">
-                <h2>📊 Data Overview</h2>
-                <p>Hostel accommodation data</p>
+                <h2>📊 Room Allocation Overview</h2>
+                <p>View and manage hostel room allocations</p>
               </div>
               <div className="data-container">
                 {csvData.length === 0 ? (
@@ -271,53 +272,7 @@ const Dashboard = () => {
                     <p>Upload a CSV file with hostel data to view here</p>
                   </div>
                 ) : (
-                  <div className="data-table-container">
-                    <div className="table-info">
-                      <span className="record-count">
-                        {csvData.length} hostel record{csvData.length !== 1 ? 's' : ''} loaded
-                      </span>
-                      {hostelList.length > 0 && (
-                        <div className="hostel-filter">
-                          <label htmlFor="hostel-select">Filter by Hostel:</label>
-                          <select 
-                            id="hostel-select"
-                            value={selectedHostel} 
-                            onChange={(e) => setSelectedHostel(e.target.value)}
-                            className="hostel-dropdown"
-                          >
-                            <option value="all">All Hostels ({hostelList.reduce((sum, h) => sum + h.roomCount, 0)} rooms)</option>
-                            {hostelList.map(hostel => (
-                              <option key={hostel.name} value={hostel.name}>
-                                {hostel.name} ({hostel.roomCount} room{hostel.roomCount !== 1 ? 's' : ''})
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
-                    </div>
-                    <div className="table-wrapper">
-                      <table className="data-table">
-                        <thead>
-                          <tr>
-                            <th>Hostel Name</th>
-                            <th>Available Room No.</th>
-                            <th>Room Capacity</th>
-                            <th>Room Password</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {csvData.map((row, index) => (
-                            <tr key={row.id || index}>
-                              <td>{row['hostel name']}</td>
-                              <td>{row['available room no.']}</td>
-                              <td>{row['room capacity']}</td>
-                              <td>{row['room password']}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+                  <RoomAllocationView />
                 )}
               </div>
             </section>

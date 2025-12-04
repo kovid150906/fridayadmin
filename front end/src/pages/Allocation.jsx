@@ -17,6 +17,7 @@ const Allocation = () => {
   const [isLoadingAllocations, setIsLoadingAllocations] = useState(true);
   const [isLoadingRooms, setIsLoadingRooms] = useState(true);
   const [allocationLoadError, setAllocationLoadError] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     fetchRooms();
@@ -96,11 +97,30 @@ const Allocation = () => {
       `✅ Allocated ${allocation.hostel} - Room ${allocation.roomNo} to ${allocation.name}`,
       'success'
     );
+    
+    // Update local allocatedRooms state to reflect the new allocation
+    setAllocatedRooms(prev => [...prev, {
+      name: allocation.name,
+      mi_no: allocation.miNo,
+      email: allocation.email,
+      hostel: allocation.hostel,
+      room_no: allocation.roomNo,
+      room_password: allocation.roomPassword,
+      allocated_at: new Date().toISOString()
+    }]);
+    
     setScannedPerson(null); // Reset for next scan
   };
 
   const handleAllocationError = (error) => {
-    showStatus(error, 'error');
+    // More descriptive error messages
+    let errorMessage = error;
+    if (error.includes('fetch') || error.includes('network')) {
+      errorMessage = '🔌 Network error. Check your connection and try again.';
+    } else if (error.includes('timeout')) {
+      errorMessage = '⏱️ Request timed out. Server might be slow or unreachable.';
+    }
+    showStatus(errorMessage, 'error');
   };
 
   const handleSyncSuccess = (message) => {
@@ -155,31 +175,35 @@ const Allocation = () => {
         )}
 
         <div className="allocation-layout">
-          {/* Left Column: QR Scanner */}
-          <div className="allocation-column">
+          {/* Left Column: QR Scanner - Compact */}
+          <div className="allocation-column scanner-column">
             <QRScanner 
               onScanSuccess={handleScanSuccess}
               onScanError={handleScanError}
+              isSyncing={isSyncing}
             />
           </div>
 
-          {/* Middle Column: Allocation Form */}
-          <div className="allocation-column">
+          {/* Center Column: Room Grid - Large */}
+          <div className="allocation-column grid-column">
             <AllocationForm
               scannedPerson={scannedPerson}
               availableRooms={rooms}
               allocatedRooms={allocatedRooms}
               isLoadingAllocations={isLoadingAllocations}
+              isSyncing={isSyncing}
               onAllocationSuccess={handleAllocationSuccess}
               onAllocationError={handleAllocationError}
             />
           </div>
 
-          {/* Right Column: Print & Sync */}
-          <div className="allocation-column">
+          {/* Right Column: Print & Actions - Small */}
+          <div className="allocation-column actions-column">
             <PrintAllocation
               onSyncSuccess={handleSyncSuccess}
               onSyncError={handleSyncError}
+              onSyncStart={() => setIsSyncing(true)}
+              onSyncEnd={() => setIsSyncing(false)}
             />
           </div>
         </div>

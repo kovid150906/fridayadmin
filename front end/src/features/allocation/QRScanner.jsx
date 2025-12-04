@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
-import './QRScanner.css';
+import '../../css/QRScanner.css';
 
 /**
  * QR & Barcode Scanner Component
@@ -11,7 +11,7 @@ import './QRScanner.css';
  * - Barcode: CODE_128, CODE_39, EAN, UPC formats
  *   Barcode data should encode the same JSON format or MI number
  */
-const QRScanner = ({ onScanSuccess, onScanError }) => {
+const QRScanner = ({ onScanSuccess, onScanError, isSyncing = false }) => {
   const [isScanning, setIsScanning] = useState(false);
   const [cameras, setCameras] = useState([]);
   const [selectedCamera, setSelectedCamera] = useState('');
@@ -247,29 +247,15 @@ const QRScanner = ({ onScanSuccess, onScanError }) => {
       
       if (data.name && data.miNo && data.email) {
         onScanSuccess?.(data);
-        if (scanMode === 'camera') {
-          stopCameraScanning(); // Auto-stop camera after successful scan
-        } else {
-          // For hardware scanner, just update status
-          setScannerStatus('ready');
-          setHardwareScanning(false);
-          setLastScanTime(new Date().toLocaleTimeString());
-        }
+        // Don't stop scanning - keep scanning continuously
+        setLastScanTime(new Date().toLocaleTimeString());
       } else {
         console.error('Invalid data format:', data);
         onScanError?.('Invalid QR/Barcode format. Expected: name, miNo, email');
-        if (scanMode === 'hardware') {
-          setScannerStatus('ready');
-          setHardwareScanning(false);
-        }
       }
     } catch (err) {
       console.error('Parse error:', err, 'Raw data:', decodedText);
       onScanError?.('QR/Barcode must contain JSON: {"name":"...","miNo":"...","email":"..."}');
-      if (scanMode === 'hardware') {
-        setScannerStatus('ready');
-        setHardwareScanning(false);
-      }
     }
   };
 
@@ -336,6 +322,18 @@ const QRScanner = ({ onScanSuccess, onScanError }) => {
     };
   }, []);
 
+  // Stop scanning when syncing starts
+  useEffect(() => {
+    if (isSyncing) {
+      if (isScanning) {
+        stopCameraScanning();
+      }
+      if (hardwareScanning) {
+        stopHardwareScanning();
+      }
+    }
+  }, [isSyncing]);
+
   return (
     <div className="qr-scanner-container">
       <div className="scanner-header">
@@ -360,10 +358,6 @@ const QRScanner = ({ onScanSuccess, onScanError }) => {
         <div className="camera-scanner">
           {!camerasLoaded ? (
             <div className="camera-ready">
-              <p>📷 Camera Mode - QR & Barcode Support</p>
-              <p className="info-text">Click "Start Scanning" to activate your camera</p>
-              <p className="info-text-small">Supports QR codes and common barcode formats (CODE_128, EAN, UPC, etc.)</p>
-              
               <div id="qr-reader" className="qr-reader-box"></div>
 
               <div className="scanner-controls">

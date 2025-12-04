@@ -31,6 +31,10 @@
   font-weight: 500;
   font-size: 1rem;
   animation: slideIn 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .status-banner.success {
@@ -39,10 +43,31 @@
   border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
+.status-banner.success::before {
+  content: '✅';
+  font-size: 1.2rem;
+}
+
 .status-banner.error {
   background: rgba(239, 68, 68, 0.2);
   color: #fca5a5;
   border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-banner.error::before {
+  content: '⚠️';
+  font-size: 1.2rem;
+}
+
+.status-banner.warning {
+  background: rgba(251, 191, 36, 0.2);
+  color: #fcd34d;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.status-banner.warning::before {
+  content: '⚡';
+  font-size: 1.2rem;
 }
 
 @keyframes slideIn {
@@ -58,8 +83,21 @@
 
 .allocation-layout {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
+  grid-template-columns: 300px 1fr 280px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.scanner-column {
+  max-width: 300px;
+}
+
+.grid-column {
+  min-width: 0;
+}
+
+.actions-column {
+  max-width: 280px;
 }
 
 .allocation-column {
@@ -69,16 +107,20 @@
 
 @media (max-width: 1400px) {
   .allocation-layout {
-    grid-template-columns: 1fr 1fr;
-  }
-  
-  .allocation-column:last-child {
-    grid-column: 1 / -1;
+    grid-template-columns: 280px 1fr 260px;
+    gap: 1rem;
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .allocation-layout {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .scanner-column,
+  .grid-column,
+  .actions-column {
+    max-width: 100%;
   }
 }

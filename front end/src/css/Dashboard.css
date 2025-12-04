@@ -37,7 +37,8 @@
 
 /* Section Styles */
 .upload-section,
-.data-section {
+.data-section,
+.allocation-overview-section {
   background: rgba(15, 23, 42, 0.7);
   backdrop-filter: blur(10px);
   border-radius: 12px;
@@ -189,6 +190,13 @@
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
+  gap: 0;
+}
+
+.allocation-grid-divider {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.3), transparent);
+  margin: 40px 0;
 }
 
 .empty-state {
