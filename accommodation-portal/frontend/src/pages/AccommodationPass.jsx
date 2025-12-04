@@ -11,11 +11,13 @@ const AccommodationPass = () => {
   const navigate = useNavigate();
 
   const userName = localStorage.getItem('userName');
-  const userEmail = localStorage.getItem('userEmail');
   const miNo = localStorage.getItem('miNo');
+  const userEmail = localStorage.getItem('userEmail');
+  const userCollege = localStorage.getItem('college');
+  const userPhone = localStorage.getItem('phone');
 
-  // Redirect if not logged in
-  if (!userName || !userEmail || !miNo) {
+  // Redirect if not logged in (email is not required for pass view)
+  if (!userName || !miNo) {
     navigate('/login');
     return null;
   }
@@ -33,7 +35,10 @@ const AccommodationPass = () => {
     try {
       console.log('📧 Fetching image for email:', userEmail);
       
-      const url = `/api/accommodation/get-image?email=${encodeURIComponent(userEmail)}`;
+      // If email is present, prefer it; otherwise try fetching by MI number
+      const url = userEmail
+        ? `/api/accommodation/get-image?email=${encodeURIComponent(userEmail)}`
+        : `/api/accommodation/get-image?mi=${encodeURIComponent(miNo)}`;
       console.log('🌐 Fetching from:', url);
       
       const response = await fetch(url);
@@ -123,11 +128,10 @@ const AccommodationPass = () => {
       <div className="pass-container">
         <div className="pass-card front">
           <div className="pass-header">
-            <div className="header-content">
-              <h1 className="moodi-title">MOOD INDIGO</h1>
-              <p className="festival-year">2025</p>
-              <p className="pass-type">Accommodation Pass</p>
-            </div>
+            <img src="/moodilogo.png" className="moodi-logo" alt="Moodilogo" />
+              <div className="header-content">
+                <p className="pass-type">Accommodation Pass</p>
+              </div>
           </div>
 
           <div className="pass-body">
@@ -137,39 +141,41 @@ const AccommodationPass = () => {
                 {userImage ? (
                   <img src={userImage} alt="User" className="pass-photo" />
                 ) : (
-                  <div className="pass-photo-placeholder">
-                    <span>📷</span>
-                  </div>
+                    <div className="pass-photo-placeholder"></div>
                 )}
               </div>
 
               <div className="pass-info">
-                <div className="info-row">
-                  <span className="info-label">Participant Name</span>
-                  <span className="info-value">{userName}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">MI Number</span>
-                  <span className="info-value highlight">{miNo}</span>
-                </div>
-                <div className="info-row">
-                  <span className="info-label">Email Address</span>
-                  <span className="info-value">{userEmail}</span>
-                </div>
+                  <div className="info-row">
+                    <span className="info-label">Participant Name</span>
+                    <span className="info-value">{userName}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">MI Number</span>
+                    <span className="info-value highlight">{miNo}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">College</span>
+                    <span className="info-value">{userCollege || '—'}</span>
+                  </div>
+                  <div className="info-row">
+                    <span className="info-label">Phone Number</span>
+                    <span className="info-value">{userPhone || '—'}</span>
+                  </div>
               </div>
             </div>
 
-            {/* Right Column - QR and Barcode */}
+            {/* Right Column - QR, Barcode, Declarations, Signature */}
             <div className="pass-right-col">
               <div className="pass-codes">
                 <div className="qr-section">
                   <span className="code-label">QR Code</span>
                   <div className="qr-code-wrapper">
-                    <QRCode 
-                      value={qrData} 
-                      size={180}
+                    <QRCode
+                      value={qrData}
+                      size={160}
                       level="H"
-                      style={{ height: "auto", maxWidth: "100%", width: "180px" }}
+                      style={{ height: "auto", maxWidth: "100%", width: "160px" }}
                     />
                   </div>
                 </div>
@@ -177,11 +183,11 @@ const AccommodationPass = () => {
                 <div className="barcode-section">
                   <span className="code-label">Barcode</span>
                   <div className="barcode-wrapper">
-                    <Barcode 
+                    <Barcode
                       value={qrData}
                       format="CODE128"
-                      width={5}
-                      height={700}
+                      width={2}
+                      height={90}
                       displayValue={false}
                       background="transparent"
                       margin={0}
@@ -191,14 +197,25 @@ const AccommodationPass = () => {
                     <span className="barcode-mi">{miNo}</span>
                   </div>
                 </div>
+
+                <div className="declarations">
+                  <h3 className="decl-title">Declarations</h3>
+                  <ol className="decl-list">
+                    <li>I will carry a valid government-issued photo ID (college ID, Aadhar, or passport) at all times while on festival premises.</li>
+                    <li>I will comply with accommodation rules, check-in/check-out times and follow staff instructions for safety and conduct.</li>
+                    <li>I confirm that the information provided is accurate. I accept responsibility for any violations arising from incorrect information.</li>
+                  </ol>
+                </div>
+
+                <div className="signature-area no-print">
+                  <div className="signature-line" />
+                  <p className="signature-label">Participant Signature</p>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="pass-footer">
-            <p className="footer-text">Asia's Largest College Cultural Festival</p>
-            <p className="footer-text"><span className="footer-highlight">Mood Indigo 2025</span> • IIT Bombay</p>
-          </div>
+          <div className="pass-footer"></div>
         </div>
       </div>
     </div>

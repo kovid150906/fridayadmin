@@ -234,7 +234,7 @@ const ImageUpload = () => {
     <div className="image-upload-page">
       <div className="upload-container">
         <div className="upload-header">
-          <div className="moodi-logo">🎭</div>
+          <img src="/moodilogo.png" className="moodi-logo" alt="Moodilogo" />
           <h1>Upload Your Photo</h1>
           <p className="user-greeting">Welcome, <strong>{userName}</strong>!</p>
           <p className="upload-instruction">Please upload a clear photo for your accommodation pass</p>

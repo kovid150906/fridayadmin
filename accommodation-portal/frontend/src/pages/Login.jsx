@@ -101,10 +101,8 @@ const Login = () => {
     <div className='login-page'>
       <div className="login-container">
         <div className="login-header">
-          <div className="login-logo">🎭</div>
-          <h1 className="login-title">Mood Indigo 2025</h1>
-          <p className="login-subtitle">Accommodation Portal</p>
-          <p className="festival-tag">Asia's Largest College Cultural Festival</p>
+          <img src="/moodilogo.png" alt="Mood Indigo" className="moodi-logo" />
+          <h2 className="login-subtitle">Accommodation Portal</h2>
         </div>
 
         {loading ? (
@@ -114,25 +112,26 @@ const Login = () => {
           </div>
         ) : (
           <>
-            <div className="login-toggle">
+            <div className="login-buttons">
               <button 
-                className={`toggle-btn ${!useEmailLogin ? 'active' : ''}`}
+                className={`login-btn google-btn ${!useEmailLogin ? 'active' : ''}`}
                 onClick={() => setUseEmailLogin(false)}
               >
-                Google Login
+                <FcGoogle className="btn-icon" />
+                <span>Google Login</span>
               </button>
               <button 
-                className={`toggle-btn ${useEmailLogin ? 'active' : ''}`}
+                className={`login-btn email-btn ${useEmailLogin ? 'active' : ''}`}
                 onClick={() => setUseEmailLogin(true)}
               >
-                Email Login
+                <MdEmail className="btn-icon" />
+                <span>Email Login</span>
               </button>
             </div>
 
             <div className="login-method">
               {!useEmailLogin ? (
-                <button className="google-login-btn" onClick={handleLogin}>
-                  <FcGoogle className="btn-icon" />
+                <button className="submit-btn" onClick={handleLogin}>
                   <span>Sign in with Google</span>
                 </button>
               ) : (

@@ -14,7 +14,10 @@
 
 .accommodation-pass-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--bg-dark-1) 0%, var(--bg-dark-2) 100%);
+  /* background image with semi-transparent gradient overlay (slightly darker) */
+  background-image: linear-gradient(180deg, #420B66B3 0%, #37094AB3 100%), url('/bgimage.png');
+  background-size: cover;
+  background-position: center;
   background-attachment: fixed;
   display: flex;
   flex-direction: column;
@@ -52,14 +55,18 @@
   box-shadow: 0 8px 24px rgba(124, 108, 255, 0.3);
 }
 
-.print-btn:hover {
-  background: linear-gradient(135deg, var(--accent-purple), #9580ff);
-  color: #0a0a0a;
+.print-btn:hover,
+.download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(124,108,255,0.18);
 }
 
-.download-btn:hover {
-  background: linear-gradient(135deg, var(--accent-orange), #ffb366);
-  color: #0a0a0a;
+/* Make the print and download buttons solid purple (no gradients) */
+.print-btn,
+.download-btn {
+  background: var(--accent-purple);
+  color: #ffffff;
+  border: none;
 }
 
 .btn-icon {
@@ -69,69 +76,63 @@
 /* Pass Container */
 .pass-container {
   width: 100%;
-  max-width: 900px;
+  max-width: 780px;
   perspective: 1000px;
 }
 
 .pass-card {
-  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  background: #2C0446;
   border-radius: 20px;
   box-shadow: 0 25px 80px rgba(0, 0, 0, 0.8);
   overflow: hidden;
   position: relative;
-  border: 1px solid rgba(124, 108, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 /* Pass Header */
 .pass-header {
-  background: linear-gradient(135deg, var(--accent-purple), var(--accent-orange));
+  background: transparent;
   padding: 30px;
   text-align: center;
   position: relative;
   overflow: hidden;
 }
 
-.pass-header::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.1), transparent 70%);
-  animation: shimmer 8s linear infinite;
-}
-
-@keyframes shimmer {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+/* animated shimmer removed from header to stop moving gradient */
 
 .header-content {
   position: relative;
   z-index: 1;
 }
 
+/* Moodilogo used across pages */
+.moodi-logo {
+  max-width: 420px;
+  width: 80%;
+  display: block;
+  margin: 8px auto 14px;
+  filter: none;
+}
+
 .moodi-title {
   font-size: 48px;
   font-weight: 900;
-  color: #0a0a0a;
+  color: var(--text-primary);
   letter-spacing: 4px;
   margin: 0;
-  text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.3);
 }
 
 .festival-year {
   font-size: 28px;
   font-weight: 800;
-  color: #0a0a0a;
+  color: var(--text-primary);
   margin: 5px 0;
 }
 
 .pass-type {
   font-size: 18px;
   font-weight: 700;
-  color: rgba(10, 10, 10, 0.8);
+  color: rgba(255, 255, 255, 0.9);
   text-transform: uppercase;
   letter-spacing: 2px;
   margin: 0;
@@ -140,10 +141,10 @@
 /* Pass Body */
 .pass-body {
   display: grid;
-  grid-template-columns: 420px 1fr;
-  gap: 35px;
-  padding: 40px;
-  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  grid-template-columns: 320px 1fr;
+  gap: 20px;
+  padding: 24px;
+  background: transparent;
 }
 
 /* Left Column */
@@ -158,8 +159,9 @@
   aspect-ratio: 1;
   border-radius: 16px;
   overflow: hidden;
-  border: 4px solid var(--accent-purple);
-  box-shadow: 0 10px 40px rgba(124, 108, 255, 0.3);
+  /* removed strong purple headline on image border */
+  border: 4px solid rgba(255,255,255,0.06);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
   background: linear-gradient(135deg, rgba(124, 108, 255, 0.1), rgba(255, 159, 71, 0.1));
 }
 
@@ -173,11 +175,8 @@
 .pass-photo-placeholder {
   width: 100%;
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 80px;
-  background: rgba(124, 108, 255, 0.1);
+  display: block;
+  background: #000000;
 }
 
 .pass-info {
@@ -208,7 +207,7 @@
 }
 
 .info-value.highlight {
-  color: var(--accent-purple);
+  color: var(--text-primary);
   font-size: 24px;
   font-weight: 900;
 }
@@ -216,14 +215,14 @@
 /* Right Column */
 .pass-right-col {
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* shift contents upward */
   justify-content: center;
 }
 
 .pass-codes {
   display: flex;
   flex-direction: column;
-  gap: 35px;
+  gap: 12px; /* tighter vertical spacing */
   width: 100%;
   align-items: center;
 }
@@ -245,42 +244,97 @@
   letter-spacing: 2px;
 }
 
+
 .qr-code-wrapper {
   background: #ffffff;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-  border: 2px solid #e0e0e0;
+  padding: 12px;
+  border-radius: 10px;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.08);
+  border: 2px solid #e6e6e6;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 220px;
-  min-height: 220px;
+  min-width: 160px;
+  min-height: 160px;
 }
 
 .qr-code-wrapper svg {
   display: block !important;
-  width: 180px !important;
-  height: 180px !important;
+  width: 160px !important;
+  height: 160px !important;
 }
+
 
 .barcode-wrapper {
   background: #ffffff;
-  padding: 15px 20px;
-  border-radius: 12px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-  border: 2px solid #e0e0e0;
+  padding: 2px 6px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  border: 2px solid #e6e6e6;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  max-width: 380px;
+  max-width: 320px;
+  height: 60px; /* further reduced wrapper height */
+  overflow: visible; /* allow taller svg to show */
 }
 
 .barcode-wrapper svg {
   display: block !important;
-  width: 100% !important;
-  height: auto !important;
+  width: auto !important;
+  height: 1200px !important; /* greatly increased barcode height */
+}
+
+.declarations {
+  margin-top: 12px;
+  padding: 6px 6px 4px 6px;
+  color: rgba(255,255,255,0.95);
+}
+
+.decl-item {
+  font-size: 13px;
+  margin: 6px 0;
+  line-height: 1.2;
+}
+
+.decl-title {
+  font-size: 13px;
+  font-weight: 800;
+  margin: 2px 0 6px 0;
+  color: rgba(255,255,255,0.98);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.decl-list {
+  margin: 0 0 0 14px;
+  padding-left: 14px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: rgba(255,255,255,0.94);
+}
+
+.decl-list li {
+  margin: 6px 0;
+}
+.signature-area {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.signature-line {
+  width: 70%;
+  border-bottom: 2px solid rgba(255,255,255,0.6);
+  height: 0;
+}
+
+.signature-label {
+  margin-top: 6px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.85);
 }
 
 .barcode-info {
@@ -297,7 +351,7 @@
 
 /* Pass Footer */
 .pass-footer {
-  background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+  background: transparent;
   padding: 25px;
   text-align: center;
 }
@@ -352,7 +406,7 @@
   }
 
   .accommodation-pass-page {
-    background: white;
+    /* keep same background as screen for print to match on-screen layout */
     padding: 0;
     min-height: auto;
   }
@@ -365,6 +419,62 @@
   .pass-card {
     box-shadow: none;
     page-break-inside: avoid;
+  }
+
+  /* Keep layout same as screen when printing */
+  .pass-photo-section {
+    max-width: 320px;
+    aspect-ratio: 1;
+    border-radius: 16px;
+    border-width: 4px;
+    margin: 0;
+  }
+
+  .pass-photo {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+    display: block;
+  }
+
+  .pass-body {
+    grid-template-columns: 320px 1fr;
+    gap: 20px;
+    padding: 24px;
+  }
+
+  /* Make barcode less heavy in print and cap its height to avoid fully black prints */
+  .barcode-wrapper {
+    height: 320px;
+    overflow: visible;
+  }
+
+  .barcode-wrapper svg {
+    height: 320px !important;
+  }
+
+  /* Reduce ink: override fills/strokes for barcode SVG to a dark gray so it doesn't print fully black */
+  .barcode-wrapper svg,
+  .barcode-wrapper svg rect,
+  .barcode-wrapper svg path,
+  .barcode-wrapper svg line,
+  .barcode-wrapper svg g {
+    fill: #333333 !important;
+    stroke: #333333 !important;
+    opacity: 0.95 !important;
+  }
+
+  /* Force pass card background to print like on-screen and request exact color printing where supported */
+  .pass-card {
+    background: #2C0446 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
+
+  /* Hide large page background image for print (use card background instead)", some browsers ignore background images */
+  .accommodation-pass-page {
+    background-image: none !important;
   }
 }
 
@@ -438,41 +548,15 @@
 }
 
 @media (max-width: 480px) {
-  .accommodation-pass-page {
-    padding: 20px 10px;
-  }
-
-  .moodi-title {
-    font-size: 32px;
-  }
-
-  .festival-year {
-    font-size: 20px;
-  }
-
-  .pass-header {
-    padding: 25px 20px;
-  }
-
-  .pass-body {
-    padding: 25px 20px;
-    gap: 25px;
-  }
-
-  .info-value {
-    font-size: 16px;
-  }
-
-  .info-value.highlight {
-    font-size: 22px;
-  }
-
-  .info-label {
-    font-size: 11px;
-  }
-
-  .qr-code-wrapper svg {
-    width: 160px !important;
-    height: 160px !important;
-  }
+  .accommodation-pass-page { padding: 20px 10px; }
+  .moodi-title { font-size: 32px; }
+  .festival-year { font-size: 20px; }
+  .pass-header { padding: 16px; }
+  .pass-body { padding: 16px; gap: 16px; }
+  .info-value { font-size: 16px; }
+  .info-value.highlight { font-size: 20px; }
+  .qr-code-wrapper { padding: 12px; min-width: 140px; min-height: 140px; }
+  .qr-code-wrapper svg { width: 140px !important; height: 140px !important; }
+  .barcode-wrapper { padding: 8px 10px; max-width: 260px; height: 40px; }
+  .barcode-wrapper svg { height: 320px !important; }
 }

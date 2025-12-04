@@ -14,7 +14,10 @@
 
 .image-upload-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--bg-dark-1) 0%, var(--bg-dark-2) 100%);
+  /* background image with semi-transparent gradient overlay (same as login) */
+  background-image: linear-gradient(180deg, #420B66B3 0%, #37094AB3 100%), url('/bgimage.png');
+  background-size: cover;
+  background-position: center;
   background-attachment: fixed;
   display: flex;
   align-items: center;
@@ -43,9 +46,11 @@
 }
 
 .moodi-logo {
-  font-size: 72px;
-  margin-bottom: 15px;
-  animation: float 3s ease-in-out infinite;
+  max-width: 320px;
+  width: 70%;
+  display: block;
+  margin: 6px auto 14px;
+  filter: none;
 }
 
 @keyframes float {
@@ -88,7 +93,7 @@
   background: rgba(255, 255, 255, 0.02);
   border: 2px dashed var(--glass-border);
   border-radius: 16px;
-  padding: 50px 30px;
+  backdrop-filter: none;
   text-align: center;
   transition: all 0.3s ease;
 }
