@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import QRCode from 'react-qr-code';
 import Barcode from 'react-barcode';
 import '../css/AccommodationPass.css';
+import '../css/AccommodationPass.print.css';
 import { FaDownload, FaPrint } from 'react-icons/fa';
 
 const AccommodationPass = () => {
@@ -67,6 +68,8 @@ const AccommodationPass = () => {
     miNo: miNo,
     email: userEmail
   });
+
+  const barcodeData = `${miNo}|${userName}|${userEmail}`;
 
   const handlePrint = () => {
     window.print();
@@ -144,7 +147,25 @@ const AccommodationPass = () => {
                     <div className="pass-photo-placeholder"></div>
                 )}
               </div>
+              <div className="declarations">
+                  <h3 className="decl-title">Declarations</h3>
+                  <ol className="decl-list">
+                    <li>I will carry a valid government-issued photo ID (college ID, Aadhar, or passport) at all times while on festival premises.</li>
+                    <li>I will comply with accommodation rules, check-in/check-out times and follow staff instructions for safety and conduct.</li>
+                    <li>I confirm that the information provided is accurate. I accept responsibility for any violations arising from incorrect information.</li>
+                  </ol>
+                </div>
 
+                <div className="signature-area no-print">
+                  <div className="signature-line" />
+                  <p className="signature-label">Participant Signature</p>
+                </div>
+
+              
+            </div>
+
+            {/* Right Column - Details and Codes */}
+            <div className="pass-right-col">
               <div className="pass-info">
                   <div className="info-row">
                     <span className="info-label">Participant Name</span>
@@ -163,12 +184,9 @@ const AccommodationPass = () => {
                     <span className="info-value">{userPhone || '—'}</span>
                   </div>
               </div>
-            </div>
-
-            {/* Right Column - QR, Barcode, Declarations, Signature */}
-            <div className="pass-right-col">
               <div className="pass-codes">
                 <div className="qr-section">
+                  
                   <span className="code-label">QR Code</span>
                   <div className="qr-code-wrapper">
                     <QRCode
@@ -180,39 +198,11 @@ const AccommodationPass = () => {
                   </div>
                 </div>
 
-                <div className="barcode-section">
-                  <span className="code-label">Barcode</span>
-                  <div className="barcode-wrapper">
-                    <Barcode
-                      value={qrData}
-                      format="CODE128"
-                      width={2}
-                      height={90}
-                      displayValue={false}
-                      background="transparent"
-                      margin={0}
-                    />
-                  </div>
-                  <div className="barcode-info">
-                    <span className="barcode-mi">{miNo}</span>
-                  </div>
                 </div>
 
-                <div className="declarations">
-                  <h3 className="decl-title">Declarations</h3>
-                  <ol className="decl-list">
-                    <li>I will carry a valid government-issued photo ID (college ID, Aadhar, or passport) at all times while on festival premises.</li>
-                    <li>I will comply with accommodation rules, check-in/check-out times and follow staff instructions for safety and conduct.</li>
-                    <li>I confirm that the information provided is accurate. I accept responsibility for any violations arising from incorrect information.</li>
-                  </ol>
-                </div>
-
-                <div className="signature-area no-print">
-                  <div className="signature-line" />
-                  <p className="signature-label">Participant Signature</p>
-                </div>
+                
               </div>
-            </div>
+            
           </div>
 
           <div className="pass-footer"></div>

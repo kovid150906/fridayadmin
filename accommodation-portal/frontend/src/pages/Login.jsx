@@ -73,6 +73,10 @@ const Login = () => {
       setLoading(false);
 
       if (accommodationData.hasAccommodation) {
+        // Store server-issued JWT (overwrites external token) so backend accepts authenticated requests
+        if (accommodationData.token) {
+          localStorage.setItem('jwtToken', accommodationData.token);
+        }
         localStorage.setItem('userName', accommodationData.name);
         localStorage.setItem('miNo', accommodationData.miNo);
         

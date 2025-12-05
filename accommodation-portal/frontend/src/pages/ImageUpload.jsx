@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../css/ImageUpload.css';
+import { auth } from '../firebase';
 import { FaCamera, FaUpload, FaCheckCircle } from 'react-icons/fa';
 
 const ImageUpload = () => {
@@ -178,9 +179,29 @@ const ImageUpload = () => {
     try {
       const formData = new FormData();
       formData.append('image', selectedImage);
-      formData.append('email', userEmail);
+      // Do NOT send user email from client — server uses the authenticated token's email only.
+      // Prefer server-issued JWT (stored in localStorage) first so we don't send Firebase ID tokens
+      // when the backend isn't configured for Firebase Admin verification. Fall back to Firebase ID token only if server JWT missing.
+      let token = localStorage.getItem('jwtToken');
+      if (!token) {
+        try {
+          if (auth && auth.currentUser) {
+            token = await auth.currentUser.getIdToken();
+          }
+        } catch (err) {
+          console.warn('Failed to get Firebase ID token:', err);
+        }
+      }
 
-      const token = localStorage.getItem('jwtToken');
+      if (!token) {
+        setUploading(false);
+        setError('Session expired. Please login again.');
+        setTimeout(() => {
+          localStorage.clear();
+          navigate('/login');
+        }, 1000);
+        return;
+      }
       
       const response = await fetch('/api/accommodation/upload-image', {
         method: 'POST',

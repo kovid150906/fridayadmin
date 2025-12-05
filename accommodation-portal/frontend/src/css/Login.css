@@ -29,16 +29,15 @@
 }
 
 .login-container {
-  /* keep given width/height but center the card horizontally and provide top spacing */
+  /* keep given width but allow vertical growth so content doesn't overflow */
   width: 1023.2734375px;
-  height: 520px; /* reduced to make card vertically thinner */
+  min-height: 520px; /* allow content to expand beyond this if needed */
   position: relative;
   margin: 100px auto; /* centers horizontally and adds top spacing */
   opacity: 1;
-  /* gradient background using #2C0446 (single-color gradient) */
   background: linear-gradient(180deg, #2C0446 0%, #2C0446 100%);
   border-radius: 20px;
-  padding: 0; /* keep internal layout controlled by children */
+  padding: 28px 40px; /* add internal padding so controls sit inside the card */
   box-shadow: none;
   backdrop-filter: none;
   z-index: 1;
@@ -122,10 +121,10 @@
 }
 
 .submit-btn {
-  width: 50%;
+  width: 100%;
   max-width: 480px;
-  margin: 30px auto 0 auto; /* pushed down slightly */
-  padding: 8px 20px; /* vertically thinner */
+  margin: 30px auto 0; /* center horizontally */
+  padding: 10px 20px;
   color: #ffffff;
   font-weight: 700;
   font-size: 16px;
@@ -163,6 +162,16 @@
 
 .login-method {
   margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.login-method .submit-btn {
+  width: 100%;
+  max-width: 480px;
+  margin: 30px 0 0; /* centered by parent flex */
 }
 
 .btn-icon {
@@ -223,6 +232,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  align-items: center; /* center form controls to avoid full-width inputs */
 }
 
 .input-group label {
@@ -235,7 +245,8 @@
 .email-input,
 .otp-input {
   width: 100%;
-  padding: 14px 16px;
+  max-width: 420px; /* keep email input a controlled width */
+  padding: 12px 14px;
   border-radius: 10px;
   border: 2px solid rgba(139, 122, 184, 0.3);
   background: rgba(255, 255, 255, 0.05);
@@ -244,6 +255,8 @@
   font-weight: 500;
   transition: all 0.3s ease;
   outline: none;
+  box-sizing: border-box;
+  align-self: center;
 }
 
 .email-input::placeholder,
@@ -275,17 +288,22 @@
 
 .send-otp-btn,
 .verify-otp-btn {
+  max-width: 420px; /* match input width */
   width: 100%;
-  padding: 16px 24px;
-  color: var(--text-primary);
-  font-weight: 700;
+  padding: 12px 18px;
+  color: #ffffff;
+  font-weight: 800;
   font-size: 16px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 5px;
-  border-radius: 0;
+  transition: all 0.18s ease;
+  margin-top: 8px;
+  border-radius: 8px;
   border: none;
-  background: transparent;
+  background: var(--btn-purple);
+  align-self: center; /* keep button within the card centered */
+  display: inline-flex;
+  justify-content: center;
+  gap: 8px;
 }
 
 .send-otp-btn:hover:not(:disabled),

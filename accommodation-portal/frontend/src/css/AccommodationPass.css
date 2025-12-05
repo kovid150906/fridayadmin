@@ -87,6 +87,7 @@
   overflow: hidden;
   position: relative;
   border: 1px solid rgba(255, 255, 255, 0.06);
+  height: 90vh;
 }
 
 /* Pass Header */
@@ -192,6 +193,7 @@
 }
 
 .info-label {
+  
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
@@ -214,9 +216,11 @@
 
 /* Right Column */
 .pass-right-col {
-  display: flex;
+  
+  flex-direction: column;
   align-items: flex-start; /* shift contents upward */
   justify-content: center;
+  margin-top: 1vh;
 }
 
 .pass-codes {
@@ -232,8 +236,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 3.5vh;
   width: 100%;
+  margin-top: 8vh;
 }
 
 .code-label {
@@ -242,6 +247,7 @@
   text-transform: uppercase;
   color: var(--text-muted);
   letter-spacing: 2px;
+  
 }
 
 
@@ -254,7 +260,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 160px;
+  min-width: 180px;
   min-height: 160px;
 }
 
@@ -278,6 +284,7 @@
   max-width: 320px;
   height: 60px; /* further reduced wrapper height */
   overflow: visible; /* allow taller svg to show */
+  margin-top: 5rem;
 }
 
 .barcode-wrapper svg {
@@ -393,84 +400,79 @@
   to { transform: rotate(360deg); }
 }
 
-.pass-loading p {
-  color: var(--text-primary);
-  font-size: 18px;
-  font-weight: 600;
-}
-
-/* Print Styles */
-@media print {
-  .no-print {
-    display: none !important;
-  }
-
-  .accommodation-pass-page {
-    /* keep same background as screen for print to match on-screen layout */
-    padding: 0;
-    min-height: auto;
-  }
-
-  .pass-container {
-    max-width: 100%;
-    box-shadow: none;
-  }
-
+/* Mobile responsive: flex layout so declarations flow to bottom (no absolute positioning) */
+@media (max-width: 768px) {
   .pass-card {
-    box-shadow: none;
-    page-break-inside: avoid;
-  }
-
-  /* Keep layout same as screen when printing */
-  .pass-photo-section {
-    max-width: 320px;
-    aspect-ratio: 1;
-    border-radius: 16px;
-    border-width: 4px;
-    margin: 0;
-  }
-
-  .pass-photo {
-    width: 100% !important;
-    height: 100% !important;
-    object-fit: cover;
-    display: block;
+    display: flex;
+    flex-direction: column;
+    min-height: 560px; /* keeps card tall enough so declarations can sit at bottom */
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    padding: 12px;
   }
 
   .pass-body {
-    grid-template-columns: 320px 1fr;
-    gap: 20px;
-    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px;
+    flex: 1 1 auto; /* allow body to grow so declarations can be pushed down */
   }
 
-  /* Make barcode less heavy in print and cap its height to avoid fully black prints */
-  .barcode-wrapper {
-    height: 320px;
-    overflow: visible;
+  .pass-left-col { align-items: center; gap: 12px; }
+
+  .pass-photo-section {
+    max-width: 200px;
+    width: 60%;
+    margin: 0 auto;
+    aspect-ratio: 1;
+    border-radius: 12px;
   }
 
-  .barcode-wrapper svg {
-    height: 320px !important;
+  .pass-info { align-items: center; text-align: center; gap: 10px; }
+
+  .pass-right-col { display: flex; width: 100%; margin-top: 0; align-items: center; justify-content: center; }
+
+  /* Flatten left column children so we can reorder them for mobile (no JSX changes required) */
+  .pass-left-col { display: contents; }
+
+  .pass-codes { display: flex; flex-direction: column; gap: 12px; width: 100%; align-items: center; margin: 0; order: 2; }
+
+  .qr-code-wrapper { min-width: 120px; min-height: 120px; padding: 8px; margin: 0; }
+  .qr-code-wrapper svg { width: 120px !important; height: 120px !important; }
+
+  .barcode-wrapper { max-width: 100%; margin: 0; height: auto; padding: 4px 6px; }
+  .barcode-wrapper svg, .barcode-wrapper canvas, .barcode-wrapper img { width: 100% !important; height: 90px !important; display: block !important; }
+
+  .moodi-title { font-size: 28px; }
+  .festival-year { font-size: 20px; }
+  .pass-type { font-size: 14px; }
+
+  .info-value { font-size: 16px; }
+  .info-value.highlight { font-size: 20px; }
+
+  .decl-item, .decl-title { font-size: 12px; }
+
+  /* Make declarations part of the flow and push to bottom using margin-top:auto */
+  .declarations {
+    /* place declarations last in the mobile flow so they sit at the bottom */
+    position: relative;
+    order: 99;
+    width: 100%;
+    margin: 8px 0 0 0;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: transparent;
+    box-shadow: none;
+    z-index: 20;
   }
 
-  /* Reduce ink: override fills/strokes for barcode SVG to a dark gray so it doesn't print fully black */
-  .barcode-wrapper svg,
-  .barcode-wrapper svg rect,
-  .barcode-wrapper svg path,
-  .barcode-wrapper svg line,
-  .barcode-wrapper svg g {
-    fill: #333333 !important;
-    stroke: #333333 !important;
-    opacity: 0.95 !important;
-  }
+  .pass-footer { padding: 12px; }
+}
 
-  /* Force pass card background to print like on-screen and request exact color printing where supported */
-  .pass-card {
-    background: #2C0446 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    color-adjust: exact;
-  }
+.pass-loading p {
+  /* Print Styles moved to `AccommodationPass.print.css` */
 
   /* Hide large page background image for print (use card background instead)", some browsers ignore background images */
   .accommodation-pass-page {

@@ -6,6 +6,27 @@ const fs = require('fs');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
+// Optional: initialize Firebase Admin SDK if service account credentials are provided
+let firebaseAdmin = null;
+try {
+  const admin = require('firebase-admin');
+  if (process.env.FIREBASE_ADMIN_JSON) {
+    const creds = JSON.parse(process.env.FIREBASE_ADMIN_JSON);
+    admin.initializeApp({ credential: admin.credential.cert(creds) });
+    firebaseAdmin = admin;
+    console.log('🔑 Firebase Admin initialized from JSON env');
+  } else if (process.env.FIREBASE_ADMIN_CREDENTIALS_PATH) {
+    const creds = require(process.env.FIREBASE_ADMIN_CREDENTIALS_PATH);
+    admin.initializeApp({ credential: admin.credential.cert(creds) });
+    firebaseAdmin = admin;
+    console.log('🔑 Firebase Admin initialized from file:', process.env.FIREBASE_ADMIN_CREDENTIALS_PATH);
+  } else {
+    console.log('ℹ️ Firebase Admin not configured (set FIREBASE_ADMIN_JSON or FIREBASE_ADMIN_CREDENTIALS_PATH)');
+  }
+} catch (e) {
+  console.warn('⚠️ Firebase Admin SDK not initialized:', e.message || e);
+}
+
 // Import database functions
 const { 
   initDatabase, 
@@ -75,31 +96,43 @@ const upload = multer({
 // JWT secret (use environment variable in production)
 const JWT_SECRET = process.env.JWT_SECRET || 'moodi-accommodation-secret-2025';
 
-// Middleware to verify JWT token (accepts both local and external tokens)
-const verifyToken = (req, res, next) => {
+// Middleware to verify token: accept either server-signed JWT or verified Firebase ID token
+const verifyToken = async (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
-  
+
   if (!token) {
     return res.status(401).json({ error: 'No token provided' });
   }
 
-  // For now, trust the token from external API and extract email from request body
-  // In production, you should verify the token with the external API
+  // 1) Try server-signed JWT first
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
+    if (!decoded || !decoded.email) {
+      return res.status(401).json({ error: 'Invalid token payload' });
+    }
     req.user = decoded;
-    next();
+    return next();
   } catch (err) {
-    // If local token fails, assume it's from external API
-    // Extract email from the request (it should be in the form data)
-    const email = req.body?.email || req.query?.email;
-    if (email) {
-      req.user = { email };
-      next();
-    } else {
-      return res.status(401).json({ error: 'Invalid token' });
+    // continue to Firebase verification if available
+  }
+
+  // 2) Try Firebase Admin verification if configured
+  if (firebaseAdmin) {
+    try {
+      const decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
+      if (!decodedToken || !decodedToken.email) {
+        return res.status(401).json({ error: 'Firebase token missing email' });
+      }
+      req.user = { email: decodedToken.email, uid: decodedToken.uid, firebase: true };
+      return next();
+    } catch (fbErr) {
+      console.error('Firebase token verification failed:', fbErr.message);
+      return res.status(401).json({ error: 'Invalid or expired token' });
     }
   }
+
+  // No valid verification method succeeded
+  return res.status(401).json({ error: 'Invalid or expired token' });
 };
 
 // Routes
@@ -181,13 +214,12 @@ app.post('/api/accommodation/upload-image', upload.single('image'), verifyToken,
     if (!req.file) {
       return res.status(400).json({ error: 'No image file provided' });
     }
+    // Use email from verified token only (do not trust client-sent email)
+    const userEmail = req.user?.email;
 
-    // Get email from form data or from verified token
-    const userEmail = req.body.email || req.user.email;
-    
     if (!userEmail) {
       fs.unlinkSync(req.file.path);
-      return res.status(400).json({ error: 'Email is required' });
+      return res.status(400).json({ error: 'Authenticated email not found' });
     }
     
     getAccommodationByEmail(userEmail, (err, user) => {
@@ -199,7 +231,11 @@ app.post('/api/accommodation/upload-image', upload.single('image'), verifyToken,
 
       // Delete old image if exists
       if (user.image_path && fs.existsSync(user.image_path)) {
-        fs.unlinkSync(user.image_path);
+        try {
+          fs.unlinkSync(user.image_path);
+        } catch (unlinkErr) {
+          console.warn('Failed to delete previous image for', userEmail, unlinkErr.message);
+        }
       }
 
       // Update database with new image path
