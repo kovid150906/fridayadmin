@@ -4,7 +4,8 @@ import autoTable from 'jspdf-autotable';
 import { getAllocations, clearAllocations, getAllocationStats } from './AllocationStorage';
 import '../../css/PrintAllocation.css';
 
-const API_BASE_URL = '/api';
+// ✅ FIX: Point directly to Backend Port 3001
+const API_BASE_URL = 'http://localhost:3001/api';
 
 /**
  * Print Allocation Component
@@ -144,6 +145,7 @@ const PrintAllocation = ({ onSyncSuccess, onSyncError, onSyncStart, onSyncEnd })
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout per attempt
         
+        // This will now fetch from http://localhost:3001/api/allocation/save
         const response = await fetch(`${API_BASE_URL}/allocation/save`, {
           method: 'POST',
           headers: {

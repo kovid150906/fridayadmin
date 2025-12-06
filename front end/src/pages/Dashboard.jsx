@@ -2,8 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import '../css/Dashboard.css';
 import RoomAllocationView from '../components/RoomAllocationView';
 
-// API Configuration
-const API_BASE_URL = 'http://localhost:3001/api';
+// API Configuration - use relative path so Vite proxy handles /api in dev (avoids CORS)
+const API_BASE_URL = '/api';
 
 const Dashboard = () => {
   const [csvData, setCsvData] = useState([]);

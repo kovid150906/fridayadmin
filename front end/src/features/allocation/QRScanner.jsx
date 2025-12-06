@@ -5,11 +5,6 @@ import '../../css/QRScanner.css';
 /**
  * QR & Barcode Scanner Component
  * Supports both web camera (phone) and hardware QR/barcode scanners
- * Supported Formats:
- * - QR Code: JSON string with { name, miNo, email }
- *   Example: {"name":"John Doe","miNo":"MI-xyz-1234","email":"john@example.com"}
- * - Barcode: CODE_128, CODE_39, EAN, UPC formats
- *   Barcode data should encode the same JSON format or MI number
  */
 const QRScanner = ({ onScanSuccess, onScanError, isSyncing = false }) => {
   const [isScanning, setIsScanning] = useState(false);
@@ -22,9 +17,10 @@ const QRScanner = ({ onScanSuccess, onScanError, isSyncing = false }) => {
   const [manualInput, setManualInput] = useState('');
   const [detectedDevices, setDetectedDevices] = useState([]);
   const [camerasLoaded, setCamerasLoaded] = useState(false);
+  
   const scannerRef = useRef(null);
   const html5QrCodeRef = useRef(null);
-  const hardwareScannerRef = useRef(null);
+  const hardwareScannerRef = useRef(''); // Buffer for hardware scanner
 
   // Detect hardware devices (centralized function)
   const detectHardwareDevices = async () => {
@@ -107,33 +103,26 @@ const QRScanner = ({ onScanSuccess, onScanError, isSyncing = false }) => {
     detectHardwareScanner();
   }, [scanMode]);
 
-  // Load cameras (only when user clicks Start Scanning)
+  // Load cameras
   useEffect(() => {
     const loadCameras = async () => {
-      // Only load cameras when explicitly needed (not on initial mount)
       if (scanMode === 'camera' && !camerasLoaded) {
-        // Don't load until user clicks start scanning
         return;
       }
     };
-
     loadCameras();
   }, [scanMode, camerasLoaded]);
 
   // Start camera scanning
   const startCameraScanning = async () => {
-    // Load cameras if not already loaded
     if (!camerasLoaded) {
       try {
         const devices = await Html5Qrcode.getCameras();
         if (devices && devices.length) {
           setCameras(devices);
-          // Default to back camera (usually index 0 or find environment-facing)
           const backCamera = devices.find(d => d.label.toLowerCase().includes('back')) || devices[0];
           setSelectedCamera(backCamera.id);
           setCamerasLoaded(true);
-          
-          // Start scanning with the selected camera
           setTimeout(() => startCameraWithDevice(backCamera.id), 100);
           return;
         } else {
@@ -146,18 +135,12 @@ const QRScanner = ({ onScanSuccess, onScanError, isSyncing = false }) => {
         return;
       }
     }
-
     startCameraWithDevice(selectedCamera);
   };
 
   const startCameraWithDevice = async (cameraId) => {
     if (!cameraId) {
       onScanError?.('No camera selected. Please check camera permissions.');
-      return;
-    }
-
-    if (!cameras || cameras.length === 0) {
-      onScanError?.('No cameras available. Please connect a camera or check permissions.');
       return;
     }
 
@@ -170,11 +153,8 @@ const QRScanner = ({ onScanSuccess, onScanError, isSyncing = false }) => {
         {
           fps: 10,
           qrbox: { width: 250, height: 250 },
-          // Enable both QR codes and barcodes
           formatsToSupport: [
-            // QR Code
             Html5QrcodeSupportedFormats.QR_CODE,
-            // Barcodes
             Html5QrcodeSupportedFormats.CODE_128,
             Html5QrcodeSupportedFormats.CODE_39,
             Html5QrcodeSupportedFormats.CODE_93,
@@ -223,7 +203,6 @@ const QRScanner = ({ onScanSuccess, onScanError, isSyncing = false }) => {
     setTimeout(async () => {
       try {
         const foundDevices = await detectHardwareDevices();
-        
         if (foundDevices.length > 0) {
           setDetectedDevices(foundDevices);
           setScannerStatus('ready');
@@ -237,71 +216,103 @@ const QRScanner = ({ onScanSuccess, onScanError, isSyncing = false }) => {
     }, 500);
   };
 
-  // Process scanned QR data
+  // Process scanned QR/Barcode data
   const handleScanResult = (decodedText) => {
-    console.log('Scanned data:', decodedText); // Debug log
+    console.log('Scanned Raw Data:', decodedText); 
     
+    // 1. Try Parsing as JSON (for your QR codes)
     try {
-      // Try parsing as JSON
       const data = JSON.parse(decodedText);
-      
       if (data.name && data.miNo && data.email) {
         onScanSuccess?.(data);
-        // Don't stop scanning - keep scanning continuously
         setLastScanTime(new Date().toLocaleTimeString());
-      } else {
-        console.error('Invalid data format:', data);
-        onScanError?.('Invalid QR/Barcode format. Expected: name, miNo, email');
+        return;
       }
-    } catch (err) {
-      console.error('Parse error:', err, 'Raw data:', decodedText);
-      onScanError?.('QR/Barcode must contain JSON: {"name":"...","miNo":"...","email":"..."}');
+    } catch (e) {
+      // Not JSON, continue to Step 2
+    }
+
+    // 2. Fallback: Treat as Raw ID (for simple Barcodes)
+    if (decodedText.length > 3 && decodedText.length < 50) {
+      console.log('Detected Raw Barcode/ID');
+      const rawData = {
+        name: "Unknown (Scanner)", 
+        miNo: decodedText, 
+        email: "manual@scan.com"
+      };
+      onScanSuccess?.(rawData);
+      setLastScanTime(new Date().toLocaleTimeString());
+    } else {
+       console.error('Invalid data format:', decodedText);
+       onScanError?.('Invalid Scan. Expected JSON or Valid ID.');
     }
   };
 
-  // Start hardware scanner listening
+  // ==========================================
+  //  FIXED HARDWARE SCANNING LOGIC START
+  // ==========================================
+
   const startHardwareScanning = () => {
     setHardwareScanning(true);
     setScannerStatus('scanning');
+    hardwareScannerRef.current = ''; 
     
-    // Listen for keyboard input (hardware scanners act as keyboards)
-    const handleKeyPress = (e) => {
-      if (!hardwareScanning) return;
-      
-      // Hardware scanners typically send data followed by Enter
-      if (e.key === 'Enter' && hardwareScannerRef.current) {
-        const scannedData = hardwareScannerRef.current;
-        if (scannedData.trim()) {
-          handleScanResult(scannedData.trim());
-          hardwareScannerRef.current = '';
-        }
-      } else if (e.key.length === 1) {
-        // Accumulate characters
-        hardwareScannerRef.current = (hardwareScannerRef.current || '') + e.key;
-      }
-    };
-
-    document.addEventListener('keypress', handleKeyPress);
-    
-    // Store cleanup function
-    window.__hardwareScannerCleanup = () => {
-      document.removeEventListener('keypress', handleKeyPress);
-    };
+    // ✅ CRITICAL FIX: BLUR THE BUTTON
+    // This stops the scanner's "Enter" key from "clicking" the button again
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
   };
 
-  // Stop hardware scanner listening
   const stopHardwareScanning = () => {
     setHardwareScanning(false);
     setScannerStatus('ready');
     hardwareScannerRef.current = '';
-    
-    if (window.__hardwareScannerCleanup) {
-      window.__hardwareScannerCleanup();
-      window.__hardwareScannerCleanup = null;
-    }
   };
 
-  // Handle manual/hardware scanner input
+  // THE KEYBOARD LISTENER
+  useEffect(() => {
+    // Only attach listener if hardware scanning is actually ON
+    if (!hardwareScanning) return;
+
+    const handleKeyDown = (e) => {
+      // SAFETY: Don't intercept if user is typing in the manual input box
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      // 1. Handle Characters (Accumulate into buffer)
+      if (e.key.length === 1) {
+        hardwareScannerRef.current = (hardwareScannerRef.current || '') + e.key;
+      }
+      
+      // 2. Handle Enter (Process the buffer)
+      else if (e.key === 'Enter') {
+        // ✅ CRITICAL FIX: Prevent "Enter" from clicking buttons or refreshing
+        e.preventDefault(); 
+        e.stopPropagation();
+
+        if (hardwareScannerRef.current && hardwareScannerRef.current.trim().length > 0) {
+          handleScanResult(hardwareScannerRef.current.trim());
+          hardwareScannerRef.current = ''; // Clear buffer
+        }
+      }
+    };
+
+    // Use 'keydown' instead of 'keypress' for better compatibility
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup listener on unmount or when hardwareScanning turns off
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [hardwareScanning]);
+
+  // ==========================================
+  //  FIXED HARDWARE SCANNING LOGIC END
+  // ==========================================
+
+  // Handle manual input submit
   const handleManualSubmit = (e) => {
     e.preventDefault();
     if (manualInput.trim()) {
@@ -310,14 +321,11 @@ const QRScanner = ({ onScanSuccess, onScanError, isSyncing = false }) => {
     }
   };
 
-  // Cleanup on unmount
+  // Global Cleanup on unmount
   useEffect(() => {
     return () => {
       if (html5QrCodeRef.current) {
         html5QrCodeRef.current.stop().catch(() => {});
-      }
-      if (window.__hardwareScannerCleanup) {
-        window.__hardwareScannerCleanup();
       }
     };
   }, []);
@@ -415,7 +423,7 @@ const QRScanner = ({ onScanSuccess, onScanError, isSyncing = false }) => {
                 {scannerStatus === 'checking' && '🔍 Detecting Scanner...'}
                 {scannerStatus === 'disconnected' && '⚠️ No Scanner Connected'}
                 {scannerStatus === 'ready' && `✅ Scanner Ready (${detectedDevices.length} device${detectedDevices.length > 1 ? 's' : ''} found)`}
-                {scannerStatus === 'scanning' && '📡 Scanning QR/Barcode...'}
+                {scannerStatus === 'scanning' && '📡 Scanning Active - Scan Now'}
               </span>
             </div>
             {lastScanTime && scannerStatus === 'ready' && (
@@ -465,8 +473,8 @@ const QRScanner = ({ onScanSuccess, onScanError, isSyncing = false }) => {
               <div className="hardware-info">
                 <p className="info-text">
                   {scannerStatus === 'scanning' 
-                    ? 'Scanning active. Scan your QR code or Barcode now or click Stop to cancel.'
-                    : 'Click "Scan QR/Barcode" to start scanning.'}
+                    ? 'Scanning active. Point your scanner at a code now.'
+                    : 'Click "Scan QR/Barcode" to start listening for input.'}
                 </p>
               </div>
               

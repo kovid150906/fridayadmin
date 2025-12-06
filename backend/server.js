@@ -5,12 +5,23 @@ const { initDatabase } = require('./config/database');
 
 const app = express();
 
-// Middleware
+// ==========================================
+// ✅ UPDATED CORS CONFIGURATION
+// ==========================================
 app.use(cors({
-  origin: [process.env.FRONTEND_URL || 'http://localhost:5173', 'http://localhost:5174'],
-  credentials: true
+  origin: [
+    process.env.FRONTEND_URL,      // From .env file
+    'http://localhost:5173',       // Vite Localhost
+    'http://localhost:5174',       // Vite Alternative Port
+    'http://127.0.0.1:5173',       // Vite IP (Critical Fix)
+    'http://127.0.0.1:5174'        // Vite IP Alternative
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// Increase payload limit for ID Card images/data
 app.use(express.json({ limit: '10mb' }));
 
 // Import route modules
@@ -42,6 +53,7 @@ app.use((req, res) => {
 
 // Error handling middleware
 app.use((error, req, res, next) => {
+  console.error('Server Error:', error); // Added console log for debugging
   res.status(500).json({
     success: false,
     error: 'Internal server error'
@@ -54,10 +66,13 @@ const PORT = process.env.PORT || 3001;
 initDatabase()
   .then(() => {
     app.listen(PORT, () => {
+      console.log(`\n==================================================`);
       console.log(`🚀 Mood Indigo Hospitality & PR Portal API running on port ${PORT}`);
       console.log(`📍 API endpoints available at http://localhost:${PORT}/api`);
-      console.log(`🏗️  Hospi Team - The Backbone of Moodi | Accommodations | Passes | Security`);
-      console.log(`\n📋 Available Routes:`);
+      console.log(`🏗️  Hospi Team - The Backbone of Moodi`);
+      console.log(`==================================================\n`);
+      
+      console.log(`📋 Available Routes:`);
       console.log(`  - POST /api/auth/login`);
       console.log(`  - GET  /api/health`);
       console.log(`  - GET  /api/dashboard/data`);

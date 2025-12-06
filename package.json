@@ -1,1 +1,11 @@
-{}
+{
+  "dependencies": {
+    "better-sqlite3": "^12.5.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "html5-qrcode": "^2.3.8",
+    "jspdf": "^3.0.4",
+    "jspdf-autotable": "^5.0.2"
+  }
+}
